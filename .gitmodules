@@ -1,0 +1,6 @@
+[submodule "src/cv_camera"]
+	path = src/cv_camera
+	url = https://github.com/OTL/cv_camera
+[submodule "src/zbar_ros"]
+	path = src/zbar_ros
+	url = https://github.com/ros-drivers/zbar_ros/tree/melodic-devel
