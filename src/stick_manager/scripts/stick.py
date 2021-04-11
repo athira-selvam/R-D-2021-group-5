@@ -1,6 +1,7 @@
 from servo import Servo
 import time
 import threading
+import multiprocessing
 
 class Stick:
     top_motor = None
@@ -15,6 +16,8 @@ class Stick:
     elapsed_time = 0
     duration = 0
     rhythm = "four_four"  # default
+    moving_process = None
+    
 	
     def __init__(self, has_stick, initial_tempo, channels):
         self.has_stick = has_stick
@@ -79,29 +82,49 @@ class Stick:
     def quick_tempo(self):
         # not implemented yet
         pass
-
-    def animate(self, rythm, duration, initial_tempo):
-        self.moving = True
+	
+	def start_animate(self, rhythm, duration, initial_tempo):
+		if self.moving:
+			self.stop_animate()
+		
+		self.moving = True
         self.started_time = time.time() * 1000
-        self.duration = duration  # in millisecond
         self.tempo = initial_tempo
         self.new_tempo = initial_tempo
         self.elapsed_time = 0
-        while self.elapsed_time <= duration:
-            if rythm == "two_two":
+        self.moving_process = multiprocessing.Process(target=self.animate, args=(rhythm, int(initial_tempo),))
+        self.moving_process.start()
+        if duration != "indefinite":
+        	multiprocessing.Process(target=self.stop_animate_after_millisecond, args=(int(duration),)).start()
+        
+	def stop_animate(self):
+		if self.moving :
+			self.moving_process.terminate()
+			self.moving = False
+	
+	def stop_animate_after_millisecond(self, duration):
+		time.sleep(duration/1000)
+		if self.moving:
+			self.stop_animate()
+	
+    def animate(self, rhythm, initial_tempo):
+        self.tempo = initial_tempo
+        self.new_tempo = initial_tempo
+        while True:
+            if rhythm == "two_two":
                 self.two_two()
-            elif rythm == "four_four":
+            elif rhythm == "four_four":
                 self.four_four()
-            elif rythm == "three_four":
+            elif rhythm == "three_four":
                 self.three_four()
-            elif rythm == "quick_tempo":
+            elif rhythm == "quick_tempo":
                 self.quick_tempo()  # not implemented yet
             else:
                 print("This rythm is not allowed")
-            # update the elapsed time
-            self.elapsed_time = time.time() * 1000 - self.started_time
             # synchronize the tempo update and make it effective at the next loop
             if self.new_tempo != self.tempo:
                 self.tempo = self.new_tempo
+                
+                
 	def new_tempo(self, new_tempo):
 		self.new_tempo = new_tempo
