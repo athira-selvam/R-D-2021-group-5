@@ -2,8 +2,8 @@ import rospy
 from std_msgs.msg import String
 import random
 
-class MusicManager:
-	music_track = ["mozart-the-marriage-of-figaro.wav"]
+class MusicController:
+	music_track = ["track_mozart-the-marriage-of-figaro.wav"]
 	music_animation = ["34000:four_four:129"]
 	instruments = ["001_1", "001_2","002_1","002_2"]
 	tempos =  ["001","002","003","004","005","006"] #e.g. 40 60 80 100 120 140
@@ -11,6 +11,7 @@ class MusicManager:
 	active_track = []
 	active_tempo = 80 #default
 	active_rhythm = "four_four"
+	playing_track = False
 	pub_speaker = None
 	pub_stick = None
 	
@@ -21,7 +22,8 @@ class MusicManager:
 	def on_detected_people(self, data):
 		#start play random music for 20 seconds
 		i = random.randint(0, len(music_track))
-		self.pub_speaker.publish("start:" + self.music_track[i] + ":" + str(self.active_tempo))
+		self.playing_track = True
+		self.pub_speaker.publish("start_track:" + self.music_track[i])
 		self.pub_stick.publish(self.music_animation[i])
 		
 	def on_code(self,data):
@@ -42,14 +44,14 @@ class MusicManager:
 				elif instrument==self.active_instrument[i] and track!=self.active_track[i]:
 					#change track
 					self.pub_speaker.publish("stop:" + self.active_instrument[i] + "_" + self.active_track[i])
-					self.pub_speaker.publish("start:" + code + ":" + str(self.active_tempo))
+					self.pub_speaker.publish("start:" + code + "_" + str(self.active_tempo))
 					self.active_track[i] = track#change track
 					managed = True
 				else:
 					pass
 			
 			if not managed:#no instrument was stopped no instrument was chaghed track => start instrument
-				self.pub_speaker.publish("start:" + code + ":" + str(self.active_tempo))
+				self.pub_speaker.publish("start:" + code + "_" + str(self.active_tempo))
 				self.active_track.append(track)
 				self.active_instrument.append(instrument)
 			
@@ -64,7 +66,7 @@ class MusicManager:
 			pass
 
 rospy.init_node('music_manager')
-mm = MusicManager()
-rospy.Subscriber("code", String, mm.on_code)
-rospy.Subscriber("detected_people", String, mm.on_detected_people)
+mc = MusicController()
+rospy.Subscriber("code", String, mc.on_code)
+rospy.Subscriber("detected_people", String, mc.on_detected_people)
 rospy.spin()
