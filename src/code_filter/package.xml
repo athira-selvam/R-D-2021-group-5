@@ -6,6 +6,8 @@
 
   <maintainer email="lorenzo.farinelli@outlook.it">Lorenzo Farinelli</maintainer>
 
+  <license>TODO</license>
+
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>roscpp</build_depend>
   <build_depend>rospy</build_depend>
