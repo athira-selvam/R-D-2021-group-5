@@ -1,3 +1,4 @@
 build
 devel
 .vscode
+src/visitors_controller/src/visitors_database.json
