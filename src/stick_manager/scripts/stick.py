@@ -3,6 +3,7 @@ import time
 import threading
 import multiprocessing
 
+
 class Stick:
     top_motor = None
     bottom_motor = None
@@ -17,16 +18,16 @@ class Stick:
     duration = 0
     rhythm = "four_four"  # default
     moving_process = None
-    
-	
+
     def __init__(self, has_stick, initial_tempo, channels):
         self.has_stick = has_stick
         if not has_stick:
-        	bottom_position[145, 90, 30]#reflect the movement
+            self.bottom_position = [145, 90, 30]  # reflect the movement
         self.tempo = initial_tempo
         self.new_tempo = initial_tempo
         self.top_motor = Servo("top", channels[0], self.top_position[0])
-        self.bottom_motor = Servo("bottom", channels[1], self.bottom_position[1])
+        self.bottom_motor = Servo(
+            "bottom", channels[1], self.bottom_position[1])
 
     def set_rhythm(self, rhythm):
         if rhythm in {"two_two", "four_four", "three_four", "quick_tempo"}:
@@ -38,10 +39,11 @@ class Stick:
         """Moves the top motor to position[1] => A
            Moves the top motor to position[0] => B
            ALL step has timing 60/tempo"""
-           
-        self.top_motor.tick_start(self.top_position[1], 60000.0 / float(self.tempo))  # A
-        self.top_motor.tick_start(self.top_position[0], 60000.0 / float(self.tempo))  # B
-        
+
+        self.top_motor.tick_start(
+            self.top_position[1], 60000.0 / float(self.tempo))  # A
+        self.top_motor.tick_start(
+            self.top_position[0], 60000.0 / float(self.tempo))  # B
 
     def four_four(self):
         """Moves the top motor to position[1] => A
@@ -49,10 +51,13 @@ class Stick:
            Moves the bottom motor to position[0] => C
            Moves both the bottom and the top motor to position[1][0] respectively => D1,D2
            ALL step has timing 60/tempo"""
-           
-        self.top_motor.tick_start(self.top_position[1], 60000.0 / float(self.tempo))  # A
-        self.bottom_motor.tick_start(self.bottom_position[2], 60000.0 / float(self.tempo))  # B
-        self.bottom_motor.tick_start(self.bottom_position[0], 60000.0 / float(self.tempo))  # C
+
+        self.top_motor.tick_start(
+            self.top_position[1], 60000.0 / float(self.tempo))  # A
+        self.bottom_motor.tick_start(
+            self.bottom_position[2], 60000.0 / float(self.tempo))  # B
+        self.bottom_motor.tick_start(
+            self.bottom_position[0], 60000.0 / float(self.tempo))  # C
         d1 = threading.Thread(target=self.bottom_motor.tick_start,
                               args=(self.bottom_position[1], 60000.0 / float(self.tempo),))  # D1
         d2 = threading.Thread(target=self.top_motor.tick_start,
@@ -67,9 +72,11 @@ class Stick:
            Moves the bottom motor to position[0] => B
            Moves both the bottom and the top motor to position[1][0] respectively => C1,C2
            ALL step has timing 60/tempo"""
-        
-        self.top_motor.tick_start(self.top_position[1], 60000.0 / float(self.tempo))  # A
-        self.bottom_motor.tick_start(self.bottom_position[0], 60000.0 / float(self.tempo))  # B
+
+        self.top_motor.tick_start(
+            self.top_position[1], 60000.0 / float(self.tempo))  # A
+        self.bottom_motor.tick_start(
+            self.bottom_position[0], 60000.0 / float(self.tempo))  # B
         c1 = threading.Thread(target=self.bottom_motor.tick_start,
                               args=(self.bottom_position[1], 60000.0 / float(self.tempo),))  # C1
         c2 = threading.Thread(target=self.top_motor.tick_start,
@@ -81,32 +88,34 @@ class Stick:
 
     def quick_tempo(self):
         # not implemented yet
-        pass
-	
-	def start_animate(self, rhythm, duration, initial_tempo):
-		if self.moving:
-			self.stop_animate()
-		
-		self.moving = True
+        return
+
+    def start_animate(self, rhythm, duration, initial_tempo):
+        if self.moving:
+            self.stop_animate()
+
+        self.moving = True
         self.started_time = time.time() * 1000
         self.tempo = initial_tempo
         self.new_tempo = initial_tempo
         self.elapsed_time = 0
-        self.moving_process = multiprocessing.Process(target=self.animate, args=(rhythm, int(initial_tempo),))
+        self.moving_process = multiprocessing.Process(
+            target=self.animate, args=(rhythm, int(initial_tempo),))
         self.moving_process.start()
         if duration != "indefinite":
-        	multiprocessing.Process(target=self.stop_animate_after_millisecond, args=(int(duration),)).start()
-        
-	def stop_animate(self):
-		if self.moving :
-			self.moving_process.terminate()
-			self.moving = False
-	
-	def stop_animate_after_millisecond(self, duration):
-		time.sleep(duration/1000)
-		if self.moving:
-			self.stop_animate()
-	
+            multiprocessing.Process(
+                target=self.stop_animate_after_millisecond, args=(int(duration),)).start()
+
+    def stop_animate(self):
+        if self.moving:
+            self.moving_process.terminate()
+            self.moving = False
+
+    def stop_animate_after_millisecond(self, duration):
+        time.sleep(duration/1000)
+        if self.moving:
+            self.stop_animate()
+
     def animate(self, rhythm, initial_tempo):
         self.tempo = initial_tempo
         self.new_tempo = initial_tempo
@@ -124,7 +133,6 @@ class Stick:
             # synchronize the tempo update and make it effective at the next loop
             if self.new_tempo != self.tempo:
                 self.tempo = self.new_tempo
-                
-                
-	def new_tempo(self, new_tempo):
-		self.new_tempo = new_tempo
+
+    def set_new_tempo(self, new_tempo):
+        self.new_tempo = new_tempo

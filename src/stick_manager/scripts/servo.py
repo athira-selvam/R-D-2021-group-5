@@ -30,14 +30,15 @@ class Servo:
             self.duration = duration  # in millisecond
             self.elapsed_time = 0
             if self.transition_style == "ease_in_out_circular":
-                self.transition = CircularEaseInOut(start=self.angle, end=target, duration=duration)
+                self.transition = CircularEaseInOut(
+                    start=self.angle, end=target, duration=duration)
             # add more if needed
 
             self.tick_start_time = time.time() * 1000
             while not (self.tick()):
                 self.elapsed_time = time.time() * 1000 - self.tick_start_time
             self.tick_started = False
-            
+
         else:
             print("The motor is still moving!")
 
@@ -53,18 +54,11 @@ class Servo:
     def __init__(self, name, channel, default_angle):
         self.name = name
         self.channel = channel
-        self.angle = default_angle;
+        self.angle = default_angle
 
-    def angle(self, value):
+    def set_angle(self, value):
         if 180 >= value >= 0:
             self.angle = value
             # kit.servo[self.__channel].angle=180
         else:
             print("The angle was too small or too large: ", value)
-
-    def plot(self):
-        for i in self.data_x:
-            print(i)
-        print("/n/n")
-        for i in self.data_y:
-            print(i)
