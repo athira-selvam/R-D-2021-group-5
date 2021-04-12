@@ -43,6 +43,7 @@ class VisitorsController():
             return
 
         # In this last case the user has to participate in the quiz
+        self.__db_manager.write_visitor_exit(visitor_id)
         # We send a message on the quiz topic containing the visitor id
         self.__pub.publish(visitor_id)
         # TODO: react and say something
