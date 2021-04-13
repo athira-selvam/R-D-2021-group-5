@@ -22,6 +22,7 @@ class StickManager:
     # (e.g., start:four_four:80 or 3000:three_four:120 or stop)
     def on_animation(self, data):
         if data.data == "stop":
+            print("Stooping animation after having received command")
             self.left_stick.stop_animate()
             self.right_stick.stop_animate()
         else:

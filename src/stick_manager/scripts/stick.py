@@ -40,8 +40,8 @@ class Stick:
            Moves the top motor to position[0] => B
            ALL step has timing 60/tempo"""
 
-        print("Moving motor A to target %d"%self.top_position[1])
-        print("Moving motor B to target %d"%self.top_position[0 ])
+        #print("Moving motor A to target %d"%self.top_position[1])
+        #print("Moving motor B to target %d"%self.top_position[0 ])
 
         self.top_motor.tick_start(
             self.top_position[1], 60000.0 / float(self.tempo))  # A
@@ -104,19 +104,17 @@ class Stick:
         self.elapsed_time = 0
         self.moving_process = multiprocessing.Process(
             target=self.animate, args=(rhythm, int(initial_tempo),))
-        self.moving_process.daemon = True
         self.moving_process.start()
         print("Duration is %s"%duration)
         if duration != "indefinite":
             killer_process = multiprocessing.Process(
                 target=self.stop_animate_after_millisecond, args=(int(duration),))
-            killer_process.daemon = True
             killer_process.start()
 
     def stop_animate(self):
         if self.moving:
-            self.moving_process.terminate()
             self.moving = False
+            self.moving_process.kill()
 
     def stop_animate_after_millisecond(self, duration):
         print("Stopping animation after duration expired")
