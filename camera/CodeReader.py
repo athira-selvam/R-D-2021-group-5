@@ -1,5 +1,6 @@
 from threading import Thread
 
+import cv2
 import zbar
 
 from camera.FrameHandler import FrameHandler
@@ -27,7 +28,9 @@ class CodeReader(Thread, FrameHandler):
             # Get the next frame from the buffer
             ret, frame = self.get_next_frame()
             if ret and frame is not None:
-                result = self.__scanner.scan(frame)
+                # First transform the frame to grayscale
+                gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                result = self.__scanner.scan(gray)
                 # TODO: Emit the code when something is detected
 
     def stop(self):

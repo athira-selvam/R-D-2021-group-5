@@ -24,6 +24,7 @@ class CameraController(Thread):
 
         # Then start the threads
         self.__code_reader.start()
+        self.__people_detector.start()
 
     def run(self) -> None:
         # Here we run the code to get frames
@@ -34,12 +35,9 @@ class CameraController(Thread):
             if not ret:
                 continue
 
-            # Transform the image to grayscale
-            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-
             # And then pass the frame to the two detectors
-            self.__code_reader.handle(gray)
-            self.__people_detector.handle(gray)
+            self.__code_reader.handle(frame)
+            self.__people_detector.handle(frame)
 
             time.sleep(0.01)
 
