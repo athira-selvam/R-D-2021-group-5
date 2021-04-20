@@ -4,11 +4,11 @@ from speaker_manager import SpeakerManager
 
 class MusicController:
 	instance = None
-	music_track = ["mozart-the-marriage-of-figaro"]
-	music_animation = [[34000, "four-four", 129]]
-	instruments = ["bassoon", "brass-ensemble","clarinet","piano","strings"]
-	traks = ["1", "2","3","4"]
-	tempos =  ["60","80","100","120"]
+	music_track = ["beethoven-fur-elise","four-seasons-vivaldi_autumn","four-seasons-vivaldi-spring","ludwig-van-beethoven-inno-alla-gioia","mozart-the-marriage-of-figaro", "pachelbel-canon"]
+	music_animation = [[33000, "four_four", 143],[24000, "four_four", 107],[23000, "four_four", 184],[27000, "four_four", 69],[33000, "four_four", 129],[25000, "four_four", 152]]
+	#instruments = ["bassoon", "brass_ensemble","clarinet","piano","strings"]
+	#traks = ["1", "2","3","4"]
+	#tempos =  ["60","80","100","120"]
 	active_instrument = []
 	active_track = []
 	active_tempo = 80 #default
@@ -36,7 +36,7 @@ class MusicController:
 		
 	def on_code(self,code):
 		if code.startswith("i:"):
-			code = code[:2] #remove first 2 char
+			code = code[2:] #remove first 2 char
 			if self.active_instrument == []:#if no active elements at this point start animation indefinite
 				self.stick_manager.start_animation(self.active_rhythm, self.active_tempo, "indefinite", self.active_synch_interval)
 			instrument = code.split("-")[0]
@@ -66,8 +66,9 @@ class MusicController:
 			
 			if self.active_instrument == []:#if no active elements at this point stop animation
 				self.stick_manager.stop_animation()
+				print("stopping all animations")
 		elif code.startswith("t:"):
-			code = code[:2] #remove first 2 char
+			code = code[2:] #remove first 2 char
 			#change tempo
 			self.speaker_manager.switch_audio_track([i+"-"+t+"-"+str(code) for i in self.active_instrument for t in self.active_track], 
 													[i+"-"+t+"-"+str(self.active_tempo) for i in self.active_instrument for t in 														self.active_track], 
@@ -79,8 +80,11 @@ class MusicController:
 
 if __name__ == "__main__":
 	mc = MusicController.get_instance()
-	inpt = input("Type p for PersonDetected, i:instrument-track for Instrument, t:tempo for tempo: ")
-	if inpt == "p":
-		mc.on_detected_person()
-	else:
-		mc.on_code(inpt)
+	inpt = ""
+	while(inpt != "q"):
+		inpt = input("Type p for PersonDetected, i:instrument-track for Instrument, t:tempo for tempo: ")
+		if inpt == "p":
+			mc.on_detected_person()
+		else:
+			mc.on_code(inpt)
+	print("exit")

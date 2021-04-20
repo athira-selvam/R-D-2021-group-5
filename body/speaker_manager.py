@@ -7,6 +7,8 @@ class SpeakerManager:
 	sound = [None for i in range(12)]
 	track_name = [None for i in range(12)]
 	channel = [0 for i in range(12)]
+	sounds_path = "Sounds/"
+	sounds_extension = ".wav"
 	
 	@staticmethod
 	def get_instance():
@@ -40,14 +42,14 @@ class SpeakerManager:
 			return
 		next_second = ceil(time.time())*1000
 		next_tick = next_second + (next_second%synch_interval)
-		print("synch at: " + next_tick)
+		print("synch at: " + str(next_tick) + ", synch_interval: " + str(synch_interval))
 		wait_for = (next_tick - time.time()*1000)/1000
 		if wait_for > 0:
 			time.sleep(wait_for)
 	
 	def start_audio_track(self, name, loops, synch_interval):
 		"""Play the track named = name and when the time is multiple of synch_interval (in milliseconds)"""
-		name = "Sounds/" + name + ".wav"
+		name = self.sounds_path + name + self.sounds_extension
 		index = self.get_free_channel()
 		if 0 <= index <= 12:
 			#load file
@@ -67,9 +69,9 @@ class SpeakerManager:
 		#synchronization
 		self.synchronize(synch_interval)
 		for i in range(len(start_names)):
-			start_names[i] = "Sounds/" + start_names[i] + ".wav"
-			stop_names[i] = "Sounds/" + stop_names[i] + ".wav"
-			index = self.self.get_id(stop_names[i])
+			start_names[i] = self.sounds_path + start_names[i] + self.sounds_extension
+			stop_names[i] = self.sounds_path + stop_names[i] + self.sounds_extension
+			index = self.get_id(stop_names[i])
 			if 0 <= index <= 12:
 				#stop
 				mixer.Channel(index).stop()
@@ -83,7 +85,7 @@ class SpeakerManager:
 				print("Stop_name track not found")
 	
 	def stop_audio_track(self, name, synch_interval):
-		name = "Sounds/" + name + ".wav"
+		name = self.sounds_path + name + self.sounds_extension
 		#search the music
 		id = self.get_id(name)
 		if 0 <= id <= 12:
@@ -92,10 +94,10 @@ class SpeakerManager:
 			#synchronization
 			self.synchronize(synch_interval)
 			mixer.Channel(id).stop()
-			print("stopped at : " + time.time()*1000)
+			print("stopped at : " + str(time.time()*1000))
 	
 	def pause_audio_track(self, name, synch_interval):
-		name = "Sounds/" + name + ".wav"
+		name = self.sounds_path + name + self.sounds_extension
 		#search the music
 		id = self.get_id(name)
 		if 0 <= id <= 12:
@@ -103,10 +105,10 @@ class SpeakerManager:
 			#synchronization
 			self.synchronize(synch_interval)
 			mixer.Channel(id).pause()
-			print("paused at : " + time.time()*1000)
+			print("paused at : " + str(time.time()*1000))
 	
 	def unpause_audio_track(self, name, synch_interval):
-		name = "Sounds/" + name + ".wav"
+		name = self.sounds_path + name + self.sounds_extension
 		#search the music
 		id = self.get_id(name)
 		if 0 <= id <= 12:
@@ -114,4 +116,4 @@ class SpeakerManager:
 			#synchronization
 			self.synchronize(synch_interval)
 			mixer.Channel(id).unpause()
-			print("unpaused at : " + time.time()*1000)
+			print("unpaused at : " + str(time.time()*1000))
