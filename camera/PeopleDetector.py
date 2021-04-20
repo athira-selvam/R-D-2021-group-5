@@ -8,6 +8,7 @@ from tensorflow.lite.python.interpreter import Interpreter
 
 from camera.FrameHandler import FrameHandler
 from camera.HeadController import HeadController
+from camera.PeopleDetectionHandler import PeopleDetectionHandler
 
 GRAPH_NAME = "detect.tflite"
 LABELMAP_NAME = "labelmap.txt"
@@ -32,6 +33,8 @@ class PeopleDetector(Thread, FrameHandler):
 
     __alive: bool
     __head: HeadController
+
+    __detection_handler: PeopleDetectionHandler
 
     def __init__(self):
         super().__init__()
@@ -139,3 +142,6 @@ class PeopleDetector(Thread, FrameHandler):
 
     def stop(self) -> None:
         self.__alive = False
+
+    def set_detection_handler(self, detection_handler: PeopleDetectionHandler):
+        self.__detection_handler = detection_handler

@@ -3,11 +3,14 @@ from threading import Thread
 
 import cv2
 
+from Singleton import Singleton
 from camera.CodeReader import CodeReader
+from camera.PeopleDetectionHandler import PeopleDetectionHandler
 from camera.PeopleDetector import PeopleDetector
+from camera.QRCodeHandler import QRCodeHandler
 
 
-class CameraController(Thread):
+class CameraController(Singleton, Thread):
     __capture: cv2.VideoCapture
     __code_reader: CodeReader
     __people_detector: PeopleDetector
@@ -43,3 +46,9 @@ class CameraController(Thread):
 
     def stop(self):
         self.__alive = False
+
+    def subscribe_to_qrcode(self, code_handler: QRCodeHandler) -> None:
+        self.__code_reader.set_code_handler(code_handler)
+
+    def subscribe_to_people_detection(self, detection_handler: PeopleDetectionHandler) -> None:
+        self.__people_detector.set_detection_handler(detection_handler)

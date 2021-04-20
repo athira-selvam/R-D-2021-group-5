@@ -31,7 +31,15 @@ class CodeReader(Thread, FrameHandler):
                 # First transform the frame to grayscale
                 gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
                 result = self.__scanner.scan(gray)
+                if len(result) != 0:
+                    # Retrieve the actual content and decode it into a string
+                    code = result[0].data.decode("utf-8")
+                    self.__code_handler.handle(code)
                 # TODO: Emit the code when something is detected
 
     def stop(self):
         self.__alive = False
+
+    def set_code_handler(self, code_handler: QRCodeHandler) -> None:
+        print("[CODE_READER] Registered new code handler")
+        self.__code_handler = code_handler
