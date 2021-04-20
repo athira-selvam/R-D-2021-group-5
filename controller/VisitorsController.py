@@ -10,8 +10,11 @@ class VisitorsController(BehaviorManager):
         # Instantiate the local database manager
         self.__db_manager = DatabaseManager()
 
-    def handle(self, code_content: str):
-        super().handle(code_content)
+    def handle_person(self, is_person_present: bool) -> None:
+        super().handle_person(is_person_present)
+
+    def handle_code(self, code_content: str):
+        super().handle_code(code_content)
 
         # First we extract the content of the message
         visitor_id = code_content

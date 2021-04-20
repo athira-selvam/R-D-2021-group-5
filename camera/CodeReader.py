@@ -34,7 +34,7 @@ class CodeReader(Thread, FrameHandler):
                 if len(result) != 0:
                     # Retrieve the actual content and decode it into a string
                     code = result[0].data.decode("utf-8")
-                    self.__code_handler.handle(code)
+                    self.__code_handler.handle_code(code)
                 # TODO: Emit the code when something is detected
 
     def stop(self):
