@@ -43,5 +43,3 @@ class QuizController:
 
 if __name__ == '__main__':
     
-    q = QuizController()
-    q.start_quiz()
