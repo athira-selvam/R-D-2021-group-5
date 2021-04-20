@@ -7,4 +7,5 @@ class QRCodeHandler(ABC):
     """
 
     def handle(self, code_content: str):
+        # TODO: Implement a code filter
         pass
