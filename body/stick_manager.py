@@ -24,7 +24,7 @@ class StickManager:
             return
         next_second = ceil(time.time())*1000
         next_tick = next_second + (next_second%synch_interval)
-        print("synch at: " + next_tick)
+        print("synch at: " + str(next_tick) + ", synch_interval: " + str(synch_interval))
         wait_for = (next_tick - time.time()*1000)/1000
         if wait_for > 0:
             time.sleep(wait_for)

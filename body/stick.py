@@ -105,10 +105,9 @@ class Stick:
         self.moving_process = multiprocessing.Process(
             target=self.animate, args=(rhythm, int(initial_tempo),))
         self.moving_process.start()
-        print("Duration is %s"%duration)
         if duration != "indefinite":
-            killer_process = multiprocessing.Process(
-                target=self.stop_animate_after_millisecond, args=(int(duration),))
+            print("animation will last " + str(duration))
+            killer_process = multiprocessing.Process(target=self.stop_animate_after_millisecond, args=(int(duration),))
             killer_process.start()
 
     def stop_animate(self):
@@ -117,8 +116,8 @@ class Stick:
             self.moving_process.kill()
 
     def stop_animate_after_millisecond(self, duration):
-        print("Stopping animation after duration expired")
         time.sleep(duration/1000)
+        print("Stopping animation after duration expired")
         if self.moving:
             self.stop_animate()
 
