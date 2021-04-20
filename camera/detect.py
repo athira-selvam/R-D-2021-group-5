@@ -8,6 +8,7 @@ from threading import Thread
 import importlib.util
 from tensorflow.lite.python.interpreter import Interpreter
 from VideoController import VideoStream
+from head import Head
 
 
 GRAPH_NAME = "detect.tflite"
@@ -57,6 +58,7 @@ class PeopleDetector():
 
 # Initialize video stream
         videostream = VideoStream(resolution=(imW,imH),framerate=30).start()
+        h = Head()
         time.sleep(1)
 
 
@@ -84,31 +86,40 @@ class PeopleDetector():
     
             for i in range(len(scores)):
                 if ((scores[i] > min_conf_threshold) and (scores[i] <= 1.0)):
+                    
+                    object_name = self.__labels[int(classes[i])]
+                    if object_name == "person":
 
             # Get bounding box coordinates and draw box
             # Interpreter can return coordinates that are outside of image dimensions, need to force them to be within image using max() and min()
-                    ymin = int(max(1,(boxes[i][0] * imH)))
-                    xmin = int(max(1,(boxes[i][1] * imW)))
-                    ymax = int(min(imH,(boxes[i][2] * imH)))
-                    xmax = int(min(imW,(boxes[i][3] * imW)))
+                        ymin = int(max(1,(boxes[i][0] * imH)))
+                        xmin = int(max(1,(boxes[i][1] * imW)))
+                        ymax = int(min(imH,(boxes[i][2] * imH)))
+                        xmax = int(min(imW,(boxes[i][3] * imW)))
             
-                    cv2.rectangle(frame, (xmin,ymin), (xmax,ymax), (10, 255, 0), 2)
+                        cv2.rectangle(frame, (xmin,ymin), (xmax,ymax), (10, 255, 0), 2)
             
 
             # Draw label
-                    object_name = self.__labels[int(classes[i])] # Look up object name from "labels" array using class index
-                    label = '%s: %d%%' % (object_name, xmin) # Example: 'person: 72%'
-                    labelSize, baseLine = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.7, 2) # Get font size
-                    label_ymin = max(ymin, labelSize[1] + 10) # Make sure not to draw label too close to top of window
-                    cv2.rectangle(frame, (xmin, label_ymin-labelSize[1]-10), (xmin+labelSize[0], label_ymin+baseLine-10), (255, 255, 255), cv2.FILLED) # Draw white box to put label text in
-                    cv2.putText(frame, label, (xmin, label_ymin-7), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0), 2) # Draw label text
+                        object_name = self.__labels[int(classes[i])] # Look up object name from "labels" array using class index
+                        xmid = xmin + ((xmax-xmin)/2)
+                        p = 640 - xmid
+                    
+                        angle = h.find_angle(p * (1/64))
+                        rot = h.rotate(angle)
+                        label = '%s: %d - %d%%' % (object_name, angle,rot) # Example: 'person: 72%'
+                        labelSize, baseLine = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.7, 2) # Get font size
+                        label_ymin = max(ymin, labelSize[1] + 10) # Make sure not to draw label too close to top of window
+                        cv2.rectangle(frame, (xmin, label_ymin-labelSize[1]-10), (xmin+labelSize[0], label_ymin+baseLine-10), (255, 255, 255), cv2.FILLED) # Draw white box to put label text in
+                        cv2.putText(frame, label, (xmin, label_ymin-7), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0), 2) # Draw label text
 
     # Draw framerate in corner of frame
             cv2.putText(frame,'FPS: {0:.2f}'.format(frame_rate_calc),(30,50),cv2.FONT_HERSHEY_SIMPLEX,1,(255,255,0),2,cv2.LINE_AA)
 
     # All the results have been drawn on the frame, so it's time to display it.
+            print("new frame")
             cv2.imshow('Object detector', frame)
-
+            
     # Calculate framerate
             t2 = cv2.getTickCount()
             time1 = (t2-t1)/freq
