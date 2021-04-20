@@ -54,6 +54,7 @@ class PeopleDetector(Thread, FrameHandler):
         self.__interpreter.allocate_tensors()
 
         self.__head = HeadController()
+        self.__head.start()
 
     def run(self) -> None:
         super().run()
@@ -92,9 +93,14 @@ class PeopleDetector(Thread, FrameHandler):
                 scores = self.__interpreter.get_tensor(output_details[2]['index'])[0]
 
                 frame = image
+                frame_w = frame.shape[1]
 
                 for i in range(len(scores)):
                     if ((scores[i] > min_conf_threshold) and (scores[i] <= 1.0)):
+                        # Draw label
+                        object_name = self.__labels[int(classes[i])]
+                        if object_name != "person":
+                            continue
                         # Get bounding box coordinates and draw box
                         # Interpreter can return coordinates that are outside of image dimensions, need to force them to be within image using max() and min()
                         ymin = int(max(1, (boxes[i][0] * imH)))
@@ -104,17 +110,14 @@ class PeopleDetector(Thread, FrameHandler):
 
                         cv2.rectangle(frame, (xmin, ymin), (xmax, ymax), (10, 255, 0), 2)
 
-                        # Draw label
-                        object_name = self.__labels[
-                            int(classes[i])]  # Look up object name from "labels" array using class index
-                        object_name = self.__labels[
-                            int(classes[i])]  # Look up object name from "labels" array using class index
                         xmid = xmin + ((xmax - xmin) / 2)
-                        p = 640 - xmid
+                        ratio = xmid / frame_w
+
+                        angle = ratio * 180
                         if i == 0:
-                            angle = self.__head.find_angle(p * (1 / 64))
-                            rot = self.__head.rotate(angle)
-                        label = '%s: %d - %d%%' % (object_name, angle, rot)  # Example: 'person: 72%'
+                            #angle = self.__head.find_angle(p * (1 / 64))
+                            self.__head.rotate(angle)
+                        label = '%s: %d' % (object_name, angle)  # Example: 'person: 72%'
                         labelSize, baseLine = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.7, 2)  # Get font size
                         label_ymin = max(ymin,
                                          labelSize[1] + 10)  # Make sure not to draw label too close to top of window

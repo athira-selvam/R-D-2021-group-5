@@ -1,35 +1,28 @@
-# from servo import Servo
-#from adafruit_servokit import ServoKit
-import math
+from adafruit_servokit import ServoKit
+
+kit = ServoKit(channels=16)
+import time
+from threading import Thread
 
 
-# kit = ServoKit(channels=16)
-
-class HeadController:
-    __angle: int
+class HeadController(Thread):
+    __angle: float
     __alive: bool
-    __rot: int
 
     def __init__(self):
+        super().__init__()
         self.__alive = True
         self.__angle = 90
-        self.__rot = 90
 
-    def find_angle(self, pos) -> float:
-        q = pos / 50
-        self.__angle = math.degrees(math.atan(q))
-        # if(__angle > 180)
-        return self.__angle
+    def run(self) -> None:
+        while self.__alive:
+            print("Rotating head to %f" % self.__angle)
+            kit.servo[5].angle = self.__angle
+            time.sleep(0.5)
 
-    def rotate(self, ang) -> float:
-        print("moving head")
+    def rotate(self, ang: float) -> None:
 
-        self.__rot = 90 + ang
+        self.__angle = ang
 
-        if self.__rot > 180 or self.__rot < 0:
-            self.__rot = 180
-
-        print("moving to %d", self.__rot)
-        # kit.servo[5].angle = 180
-
-        return self.__rot
+    def stop(self):
+        self.__alive = False
