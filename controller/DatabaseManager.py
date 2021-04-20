@@ -1,9 +1,11 @@
-from tinydb import TinyDB, Query
 import time
+
+from tinydb import TinyDB, Query
 
 
 class DatabaseManager():
-    """A class representing an object used to interact with a local database, to keep track of visitors interacting with the robot
+    """
+    A class representing an object used to interact with a local database, to keep track of visitors interacting with the robot
     """
 
     __db: TinyDB
@@ -43,7 +45,7 @@ class DatabaseManager():
         """Registers the provided visitor into the database. The entry will contain:
         - their identifier
         - the entrance time (automatically retrieved)
-        - an empty field for the exit time 
+        - an empty field for the exit time
 
         Args:
             visitor_id (str): The identifier of the visitor
