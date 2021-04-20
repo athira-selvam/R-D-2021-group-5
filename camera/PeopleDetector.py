@@ -113,7 +113,7 @@ class PeopleDetector(Thread, FrameHandler):
                         xmid = xmin + ((xmax - xmin) / 2)
                         ratio = xmid / frame_w
 
-                        angle = ratio * 180
+                        angle = int(ratio * 180)
                         if i == 0:
                             #angle = self.__head.find_angle(p * (1 / 64))
                             self.__head.rotate(angle)

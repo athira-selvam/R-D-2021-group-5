@@ -7,7 +7,7 @@ class SpeakerManager:
 	sound = [None for i in range(12)]
 	track_name = [None for i in range(12)]
 	channel = [0 for i in range(12)]
-	sounds_path = "Sounds/"
+	sounds_path = "../Sounds/"
 	sounds_extension = ".wav"
 	
 	@staticmethod
