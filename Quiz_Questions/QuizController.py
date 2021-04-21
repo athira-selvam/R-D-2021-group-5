@@ -54,13 +54,14 @@ class QuizController(Thread, QRCodeHandler):
         self.__alive = True
         self.__received_answer = None
         self.__asked_questions = 0
+        self.__picked_questions = []
 
     def __pick_question(self) -> QuizQuestion:
         # generate random number between 0 and the total number of questions
-        q_index = random.randint(0, len(quiz_questions))
+        q_index = random.randint(0, len(quiz_questions) - 1)
         while q_index in self.__picked_questions:
             # And avoid generating indexes already picked
-            q_index = random.randint(0, len(quiz_questions))
+            q_index = random.randint(0, len(quiz_questions) - 1)
         # Eventually append the index to the list of used ones
         self.__picked_questions.append(q_index)
         # And return the question
@@ -84,12 +85,16 @@ class QuizController(Thread, QRCodeHandler):
         while self.__alive:
             # Pick the question
             question = self.__pick_question()
+            print("The question is: %s" % question.get_question())
             # Ask the question
             # TODO: TTS of the question
             # And then wait for the answer
             while self.__received_answer is None:
                 # Sleep until an answer is present
+                print("Waiting for answer")
                 time.sleep(0.5)
+
+            print("Answer available: ", self.__received_answer)
 
             # Then parse the answer
             valid, answer = self.__parse_answer(self.__received_answer)
@@ -98,17 +103,24 @@ class QuizController(Thread, QRCodeHandler):
 
             # Then check the answer
             if question.get_answer() == answer:
-                # TODO: react to right answer
+                print("Answer is right")
                 pass
             else:
-                # TODO: react to wrong answer
+                print("Answer is wrong")
                 pass
 
             # Increase the counter of questions
             self.__asked_questions += 1
             # And stop if we asked all the questions
             if self.__asked_questions >= QUESTIONS_LIMIT:
+                print("Reached questions limit, stopping")
                 self.stop()
+                # TODO: Find a way to notify VisitorsManager that quiz has finished
 
     def stop(self):
         self.__alive = False
+
+    def handle_code(self, code_content: str):
+        super().handle_code(code_content)
+        # Update the reference to the received answer
+        self.__received_answer = code_content
