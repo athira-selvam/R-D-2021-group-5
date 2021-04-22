@@ -1,9 +1,14 @@
+from typing import Optional
+
+from controller.quiz.QuizController import QuizController
 from controller.BehaviorManager import BehaviorManager
-from controller.DatabaseManager import DatabaseManager
+from controller.phase2.DatabaseManager import DatabaseManager
 
 
 class VisitorsController(BehaviorManager):
     __db_manager: DatabaseManager
+    # The object controlling the quiz workflow, it can be None if no person is playing
+    __quiz_controller: Optional[QuizController]
 
     def __init__(self):
         super().__init__()
@@ -36,4 +41,11 @@ class VisitorsController(BehaviorManager):
         self.__db_manager.write_visitor_exit(visitor_id)
         # We send a message on the quiz topic containing the visitor id
         # TODO: Instantiate quiz controller and enter in quiz mode
+        self.__quiz_controller = QuizController()
+
+        # TODO: Set the state
+
         # TODO: react and say something
+
+    def get_quiz_controller(self) -> QuizController:
+        return self.__quiz_controller
