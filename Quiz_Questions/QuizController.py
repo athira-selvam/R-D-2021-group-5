@@ -4,6 +4,7 @@ import time
 from threading import Thread
 from typing import List, Optional
 
+from body.speaker_manager import SpeakerManager
 from camera.QRCodeHandler import QRCodeHandler
 
 QUESTIONS_LIMIT = 2
@@ -17,10 +18,12 @@ class QuizAnswer(enum.Enum):
 class QuizQuestion:
     __question: str
     __answer: QuizAnswer
+    __audio_file: str  # The name of the audio file for the question
 
-    def __init__(self, question: str, answer: QuizAnswer):
+    def __init__(self, question: str, answer: QuizAnswer, audio_file: str):
         self.__question = question
         self.__answer = answer
+        self.__audio_file = audio_file
 
     def get_question(self) -> str:
         return self.__question
@@ -28,12 +31,18 @@ class QuizQuestion:
     def get_answer(self) -> QuizAnswer:
         return self.__answer
 
+    def get_audio_file(self) -> str:
+        return self.__audio_file
+
 
 quiz_questions: List[QuizQuestion] = [
-    QuizQuestion("test question", QuizAnswer.TRUE),
-    QuizQuestion("false?", QuizAnswer.FALSE),
-    QuizQuestion("maybe not", QuizAnswer.TRUE),
+    QuizQuestion("test question", QuizAnswer.TRUE, "sample"),
+    QuizQuestion("false?", QuizAnswer.FALSE, "sample"),
+    QuizQuestion("maybe not", QuizAnswer.TRUE, "sample"),
 ]
+
+
+# TODO: Maybe here we can set a duration for each question, so we know how much to wait?
 
 
 class QuizController(Thread, QRCodeHandler):
@@ -49,12 +58,15 @@ class QuizController(Thread, QRCodeHandler):
 
     __received_answer: Optional[str]
 
+    __speaker: SpeakerManager
+
     def __init__(self):
         super().__init__()
         self.__alive = True
         self.__received_answer = None
         self.__asked_questions = 0
         self.__picked_questions = []
+        self.__speaker = SpeakerManager()
 
     def __pick_question(self) -> QuizQuestion:
         # generate random number between 0 and the total number of questions
@@ -87,7 +99,7 @@ class QuizController(Thread, QRCodeHandler):
             question = self.__pick_question()
             print("The question is: %s" % question.get_question())
             # Ask the question
-            # TODO: TTS of the question
+            self.__speaker.start_audio_track(question.get_audio_file(), 0, 0)
             # And then wait for the answer
             while self.__received_answer is None:
                 # Sleep until an answer is present
@@ -104,9 +116,11 @@ class QuizController(Thread, QRCodeHandler):
             # Then check the answer
             if question.get_answer() == answer:
                 print("Answer is right")
+                self.__speaker.start_audio_track("right_answer", 0, 0)
                 pass
             else:
                 print("Answer is wrong")
+                self.__speaker.start_audio_track("wrong_answer", 0, 0)
                 pass
 
             # Increase the counter of questions
@@ -116,6 +130,8 @@ class QuizController(Thread, QRCodeHandler):
                 print("Reached questions limit, stopping")
                 self.stop()
                 # TODO: Find a way to notify VisitorsManager that quiz has finished
+            # Then wait a bit before picking the next question
+            time.sleep(2)  # TODO: adjust this time interval
 
     def stop(self):
         self.__alive = False
