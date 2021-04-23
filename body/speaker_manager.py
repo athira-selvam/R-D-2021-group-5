@@ -4,7 +4,7 @@ from typing import List, Optional
 from pygame import mixer
 from pygame.mixer import Sound
 
-from Singleton import Singleton
+from utils.Singleton import Singleton
 from body.Synchronized import Synchronized
 
 

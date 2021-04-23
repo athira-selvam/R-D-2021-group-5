@@ -6,7 +6,7 @@ import board
 import neopixel
 import time
 
-from Singleton import Singleton
+from utils.Singleton import Singleton
 
 LED_COUNT = 39
 

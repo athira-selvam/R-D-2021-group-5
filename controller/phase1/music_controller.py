@@ -1,9 +1,9 @@
 import random
 
-from Singleton import Singleton
+from utils.Singleton import Singleton
+from body.speaker_manager import SpeakerManager
+from body.stick_manager import StickManager
 from controller.BehaviorManager import BehaviorManager
-from stick_manager import StickManager
-from speaker_manager import SpeakerManager
 
 
 class MusicController(Singleton, BehaviorManager):
