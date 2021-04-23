@@ -19,11 +19,13 @@ class QuizQuestion:
     __question: str
     __answer: QuizAnswer
     __audio_file: str  # The name of the audio file for the question
+    __explanation_file: Optional[str]
 
-    def __init__(self, question: str, answer: QuizAnswer, audio_file: str):
+    def __init__(self, question: str, answer: QuizAnswer, audio_file: str, explanation_file: Optional[str] = None):
         self.__question = question
         self.__answer = answer
         self.__audio_file = audio_file
+        self.__explanation_file = explanation_file
 
     def get_question(self) -> str:
         return self.__question
@@ -33,6 +35,9 @@ class QuizQuestion:
 
     def get_audio_file(self) -> str:
         return self.__audio_file
+
+    def get_explanation_file(self) -> Optional[str]:
+        return self.__explanation_file
 
 
 quiz_questions: List[QuizQuestion] = [
@@ -55,7 +60,7 @@ class QuizController(Thread, QRCodeHandler):
     __alive: bool
 
     __asked_questions: int  # A counter of the questions asked so far
-
+    __to_repeat: bool  # Indicates whether the last question has to be repeated
     __received_answer: Optional[str]
 
     __speaker: SpeakerManager
@@ -65,11 +70,19 @@ class QuizController(Thread, QRCodeHandler):
         self.__alive = True
         self.__received_answer = None
         self.__asked_questions = 0
+        self.__to_repeat = False
         self.__picked_questions = []
         self.__speaker = SpeakerManager()
 
     def __pick_question(self) -> QuizQuestion:
-        # generate random number between 0 and the total number of questions
+
+        # First check whether we have to repeat last question
+        if self.__to_repeat:
+            self.__to_repeat = False
+            # If yes just take the last sampled question
+            return quiz_questions[self.__picked_questions[len(self.__picked_questions) - 1]]
+
+        # Otherwise generate random number between 0 and the total number of questions
         q_index = random.randint(0, len(quiz_questions) - 1)
         while q_index in self.__picked_questions:
             # And avoid generating indexes already picked
@@ -80,18 +93,21 @@ class QuizController(Thread, QRCodeHandler):
         return quiz_questions[q_index]
 
     @staticmethod
-    def __parse_answer(raw_answer: str) -> (bool, Optional[QuizAnswer]):
+    def __parse_answer(raw_answer: str) -> (bool, bool, Optional[QuizAnswer]):
         if raw_answer is None or not raw_answer.startswith("quiz_answer:"):
             # If the code is not a valid answer code, return an error
-            return False, None
+            return False, False, None
         # Otherwise parse it
         answer_content = raw_answer.split(":")[1]
+        if answer_content == "R":
+            # Here we need to repeat the question
+            return True, True, None
         if answer_content == "T":
-            return True, QuizAnswer.TRUE
+            return True, False, QuizAnswer.TRUE
         elif answer_content == "F":
-            return True, QuizAnswer.FALSE
+            return True, False, QuizAnswer.FALSE
         else:
-            return False, None
+            return False, False, None
 
     def run(self) -> None:
         while self.__alive:
@@ -99,7 +115,7 @@ class QuizController(Thread, QRCodeHandler):
             question = self.__pick_question()
             print("The question is: %s" % question.get_question())
             # Ask the question
-            self.__speaker.start_audio_track(question.get_audio_file(), 0, 0)
+            self.__speaker.start_audio_track(question.get_audio_file())
             # And then wait for the answer
             while self.__received_answer is None:
                 # Sleep until an answer is present
@@ -109,19 +125,34 @@ class QuizController(Thread, QRCodeHandler):
             print("Answer available: ", self.__received_answer)
 
             # Then parse the answer
-            valid, answer = self.__parse_answer(self.__received_answer)
+            valid, repeat, answer = self.__parse_answer(self.__received_answer)
             # Clear the received answer
             self.__received_answer = None
+
+            if not valid:
+                # TODO: React to an invalid answer
+                pass
+
+            # Then check whether the person wants the question to be repeated
+            if repeat:
+                print("The question will be repeated")
+                # If yes we set the flag to True
+                self.__to_repeat = True
+                # And start a new iteration, without going any further
+                continue
 
             # Then check the answer
             if question.get_answer() == answer:
                 print("Answer is right")
-                self.__speaker.start_audio_track("right_answer", 0, 0)
-                pass
+                self.__speaker.start_audio_track("right_answer")
             else:
                 print("Answer is wrong")
-                self.__speaker.start_audio_track("wrong_answer", 0, 0)
-                pass
+                self.__speaker.start_audio_track("wrong_answer")
+
+            # Then if the question as an attached explanation, we say it:
+            explanation = question.get_explanation_file()
+            if explanation is not None:
+                self.__speaker.start_audio_track(explanation)
 
             # Increase the counter of questions
             self.__asked_questions += 1

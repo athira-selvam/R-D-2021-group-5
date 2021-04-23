@@ -37,7 +37,7 @@ class SpeakerManager(Singleton, Synchronized):
         # else channels are full
         return -1
 
-    def start_audio_track(self, name, loops, synch_interval):
+    def start_audio_track(self, name, loops=0, synch_interval=0):
         """Play the track named = name and when the time is multiple of synch_interval (in milliseconds)"""
         name = self.sounds_path + name + self.sounds_extension
         index = self.get_free_channel()
