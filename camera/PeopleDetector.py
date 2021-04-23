@@ -9,6 +9,7 @@ from tensorflow.lite.python.interpreter import Interpreter
 from camera.FrameHandler import FrameHandler
 from camera.HeadController import HeadController
 from camera.PeopleDetectionHandler import PeopleDetectionHandler
+from camera.centroidtracker import CentroidTracker
 
 GRAPH_NAME = "detect.tflite"
 LABELMAP_NAME = "labelmap.txt"
@@ -35,6 +36,7 @@ class PeopleDetector(Thread, FrameHandler):
     __head: HeadController
 
     __detection_handler: PeopleDetectionHandler
+    __tracker: CentroidTracker
 
     def __init__(self):
         super().__init__()
@@ -55,6 +57,7 @@ class PeopleDetector(Thread, FrameHandler):
 
         self.__head = HeadController()
         self.__head.start()
+        self.__tracker = CentroidTracker()
 
     def run(self) -> None:
         super().run()
@@ -94,6 +97,10 @@ class PeopleDetector(Thread, FrameHandler):
 
                 frame = image
                 frame_w = frame.shape[1]
+                rects =  []
+                r = []
+                val = []
+                track_id = 0
 
                 for i in range(len(scores)):
                     if ((scores[i] > min_conf_threshold) and (scores[i] <= 1.0)):
@@ -103,10 +110,19 @@ class PeopleDetector(Thread, FrameHandler):
                             continue
                         # Get bounding box coordinates and draw box
                         # Interpreter can return coordinates that are outside of image dimensions, need to force them to be within image using max() and min()
-                        ymin = int(max(1, (boxes[i][0] * imH)))
-                        xmin = int(max(1, (boxes[i][1] * imW)))
-                        ymax = int(min(imH, (boxes[i][2] * imH)))
-                        xmax = int(min(imW, (boxes[i][3] * imW)))
+                        rects =  []
+                        ymin = int(max(1,(boxes[i][0] * imH)))
+                        rects.append(ymin)
+                        xmin = int(max(1,(boxes[i][1] * imW)))
+                        rects.append(xmin)
+                        ymax = int(min(imH,(boxes[i][2] * imH)))
+                        rects.append(ymax)
+                        xmax = int(min(imW,(boxes[i][3] * imW)))
+                        rects.append(xmax)
+                        rects = [xmin,ymin,xmax,ymax]
+
+                        val = np.array(rects)
+                        r.append(val.astype("int"))
 
                         cv2.rectangle(frame, (xmin, ymin), (xmax, ymax), (10, 255, 0), 2)
 
@@ -117,19 +133,40 @@ class PeopleDetector(Thread, FrameHandler):
                         if i == 0:
                             #angle = self.__head.find_angle(p * (1 / 64))
                             self.__head.rotate(angle)
-                        label = '%s: %d' % (object_name, angle)  # Example: 'person: 72%'
-                        labelSize, baseLine = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.7, 2)  # Get font size
-                        label_ymin = max(ymin,
-                                         labelSize[1] + 10)  # Make sure not to draw label too close to top of window
-                        cv2.rectangle(frame, (xmin, label_ymin - labelSize[1] - 10),
-                                      (xmin + labelSize[0], label_ymin + baseLine - 10), (255, 255, 255),
-                                      cv2.FILLED)  # Draw white box to put label text in
-                        cv2.putText(frame, label, (xmin, label_ymin - 7), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0),
-                                    2)  # Draw label text
 
                 # Draw framerate in corner of frame
                 cv2.putText(frame, 'FPS: {0:.2f}'.format(frame_rate_calc), (30, 50), cv2.FONT_HERSHEY_SIMPLEX, 1,
                             (255, 255, 0), 2, cv2.LINE_AA)
+                
+                objects = ct.update(r)
+                flag = 0
+                next_id = 0
+                i = 0
+                new_coord = []
+                next_coord = []
+                coord = []
+                for (objectID, centroid) in objects.items():
+                    if(objectID == track_id):
+                        flag =1
+                        new_coord = centroid 
+                    if(i == 0):
+                        next_id = objectID
+                        next_coord = centroid 
+                        i += 1
+                    text = "ID {}".format(objectID)
+                    cv2.putText(frame, text, (centroid[0] - 10, centroid[1] - 10),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+                    cv2.circle(frame, (centroid[0], centroid[1]), 4, (0, 255, 0), -1)
+
+                if(flag ==0):
+                    track_id = next_id
+                    coord = next_coord
+                else:
+                    coord = new_coord
+                print(coord)
+
+                ### call head 
+                
 
                 # All the results have been drawn on the frame, so it's time to display it.
                 cv2.imshow('Object detector', frame)
