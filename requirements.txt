@@ -1,3 +1,5 @@
 tinydb~=4.4.0
 easing_functions
 zbar-py
+board
+neopixel
