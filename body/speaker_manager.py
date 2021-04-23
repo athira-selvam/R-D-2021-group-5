@@ -1,14 +1,14 @@
 import time
-from math import ceil
 from typing import List, Optional
 
 from pygame import mixer
 from pygame.mixer import Sound
 
 from Singleton import Singleton
+from body.Synchronized import Synchronized
 
 
-class SpeakerManager(Singleton):
+class SpeakerManager(Singleton, Synchronized):
     instance = None
     sound: List[Optional[Sound]] = [None for i in range(12)]
     track_name = [None for i in range(12)]
@@ -36,16 +36,6 @@ class SpeakerManager(Singleton):
                 return i
         # else channels are full
         return -1
-
-    def synchronize(self, synch_interval):
-        if synch_interval == 0:
-            return
-        next_second = ceil(time.time()) * 1000
-        next_tick = next_second + (next_second % synch_interval)
-        print("synch at: " + str(next_tick) + ", synch_interval: " + str(synch_interval))
-        wait_for = (next_tick - time.time() * 1000) / 1000
-        if wait_for > 0:
-            time.sleep(wait_for)
 
     def start_audio_track(self, name, loops, synch_interval):
         """Play the track named = name and when the time is multiple of synch_interval (in milliseconds)"""

@@ -1,8 +1,8 @@
+from body.Synchronized import Synchronized
 from stick import Stick
-import time
-from math import floor, ceil
 
-class StickManager:
+
+class StickManager(Synchronized):
     left_stick = None
     right_stick = None
 
@@ -18,16 +18,6 @@ class StickManager:
     def stop_animation(self):
         self.left_stick.stop_animate()
         self.right_stick.stop_animate()
-    
-    def synchronize(self, synch_interval):
-        if synch_interval == 0:
-            return
-        next_second = ceil(time.time())*1000
-        next_tick = next_second + (next_second%synch_interval)
-        print("synch at: " + str(next_tick) + ", synch_interval: " + str(synch_interval))
-        wait_for = (next_tick - time.time()*1000)/1000
-        if wait_for > 0:
-            time.sleep(wait_for)
     
     def change_tempo(self, new_tempo):
         self.left_stick.set_new_tempo(new_tempo)
