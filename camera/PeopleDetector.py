@@ -97,7 +97,7 @@ class PeopleDetector(Thread, FrameHandler):
 
                 frame = image
                 frame_w = frame.shape[1]
-                rects =  []
+                rects = []
                 r = []
                 val = []
                 track_id = 0
@@ -110,16 +110,16 @@ class PeopleDetector(Thread, FrameHandler):
                             continue
                         # Get bounding box coordinates and draw box
                         # Interpreter can return coordinates that are outside of image dimensions, need to force them to be within image using max() and min()
-                        rects =  []
-                        ymin = int(max(1,(boxes[i][0] * imH)))
+                        rects = []
+                        ymin = int(max(1, (boxes[i][0] * imH)))
                         rects.append(ymin)
-                        xmin = int(max(1,(boxes[i][1] * imW)))
+                        xmin = int(max(1, (boxes[i][1] * imW)))
                         rects.append(xmin)
-                        ymax = int(min(imH,(boxes[i][2] * imH)))
+                        ymax = int(min(imH, (boxes[i][2] * imH)))
                         rects.append(ymax)
-                        xmax = int(min(imW,(boxes[i][3] * imW)))
+                        xmax = int(min(imW, (boxes[i][3] * imW)))
                         rects.append(xmax)
-                        rects = [xmin,ymin,xmax,ymax]
+                        rects = [xmin, ymin, xmax, ymax]
 
                         val = np.array(rects)
                         r.append(val.astype("int"))
@@ -131,14 +131,14 @@ class PeopleDetector(Thread, FrameHandler):
 
                         angle = int(ratio * 180)
                         if i == 0:
-                            #angle = self.__head.find_angle(p * (1 / 64))
+                            # angle = self.__head.find_angle(p * (1 / 64))
                             self.__head.rotate(angle)
 
                 # Draw framerate in corner of frame
                 cv2.putText(frame, 'FPS: {0:.2f}'.format(frame_rate_calc), (30, 50), cv2.FONT_HERSHEY_SIMPLEX, 1,
                             (255, 255, 0), 2, cv2.LINE_AA)
-                
-                objects = ct.update(r)
+
+                objects = self.__tracker.update(r)
                 flag = 0
                 next_id = 0
                 i = 0
@@ -146,27 +146,25 @@ class PeopleDetector(Thread, FrameHandler):
                 next_coord = []
                 coord = []
                 for (objectID, centroid) in objects.items():
-                    if(objectID == track_id):
-                        flag =1
-                        new_coord = centroid 
-                    if(i == 0):
+                    if objectID == track_id:
+                        flag = 1
+                        new_coord = centroid
+                    if i == 0:
                         next_id = objectID
-                        next_coord = centroid 
+                        next_coord = centroid
                         i += 1
                     text = "ID {}".format(objectID)
                     cv2.putText(frame, text, (centroid[0] - 10, centroid[1] - 10),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
                     cv2.circle(frame, (centroid[0], centroid[1]), 4, (0, 255, 0), -1)
 
-                if(flag ==0):
+                if flag == 0:
                     track_id = next_id
                     coord = next_coord
                 else:
                     coord = new_coord
-                print(coord)
 
                 ### call head 
-                
 
                 # All the results have been drawn on the frame, so it's time to display it.
                 cv2.imshow('Object detector', frame)
