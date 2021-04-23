@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 import time
 from easing_functions import *
-#from adafruit_servokit import ServoKit
+from adafruit_servokit import ServoKit
 
 
-#kit = ServoKit(channels=16)
+kit = ServoKit(channels=16)
 
 class Servo:
     angle = 90
@@ -60,6 +60,6 @@ class Servo:
         if 180 >= value >= 0:
             self.angle = value
             #print("Writing angle %d on channel %d"%(value, self.channel))
-            #kit.servo[self.channel].angle=value
+            kit.servo[self.channel].angle=value
         else:
             print("The angle was too small or too large: ", value)

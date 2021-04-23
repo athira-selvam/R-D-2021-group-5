@@ -1,7 +1,8 @@
-from servo import Servo
-import time
-import threading
 import multiprocessing
+import threading
+import time
+
+from body.servo import Servo
 
 
 class Stick:
@@ -40,8 +41,8 @@ class Stick:
            Moves the top motor to position[0] => B
            ALL step has timing 60/tempo"""
 
-        #print("Moving motor A to target %d"%self.top_position[1])
-        #print("Moving motor B to target %d"%self.top_position[0 ])
+        # print("Moving motor A to target %d"%self.top_position[1])
+        # print("Moving motor B to target %d"%self.top_position[0 ])
 
         self.top_motor.tick_start(
             self.top_position[1], 60000.0 / float(self.tempo))  # A
@@ -116,7 +117,7 @@ class Stick:
             self.moving_process.kill()
 
     def stop_animate_after_millisecond(self, duration):
-        time.sleep(duration/1000)
+        time.sleep(duration / 1000)
         print("Stopping animation after duration expired")
         if self.moving:
             self.stop_animate()
@@ -124,7 +125,7 @@ class Stick:
     def animate(self, rhythm, initial_tempo):
         self.tempo = initial_tempo
         self.new_tempo = initial_tempo
-        alive: bool = True # A flag to make the thread self kill in case of errors
+        alive: bool = True  # A flag to make the thread self kill in case of errors
         while alive:
             if rhythm == "two_two":
                 self.two_two()
@@ -141,7 +142,7 @@ class Stick:
             # synchronize the tempo update and make it effective at the next loop
             if self.new_tempo != self.tempo:
                 self.tempo = self.new_tempo
-            time.sleep(5/1000)
+            time.sleep(5 / 1000)
 
     def set_new_tempo(self, new_tempo):
         self.new_tempo = new_tempo
