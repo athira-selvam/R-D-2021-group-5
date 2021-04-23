@@ -164,7 +164,7 @@ class PeopleDetector():
                 coord = next_coord
             else:
                 coord = new_coord
-            print(coord)
+            
             # head rotation
             
 

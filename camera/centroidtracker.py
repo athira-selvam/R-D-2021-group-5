@@ -1,6 +1,7 @@
 from scipy.spatial import distance as dist
 from collections import OrderedDict
 import numpy as np
+#Centroid
 
 class CentroidTracker():
 	def __init__(self, maxDisappeared=50):
