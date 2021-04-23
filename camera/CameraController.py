@@ -3,7 +3,7 @@ from threading import Thread
 
 import cv2
 
-from Singleton import Singleton
+from utils.Singleton import Singleton
 from camera.CodeReader import CodeReader
 from camera.PeopleDetectionHandler import PeopleDetectionHandler
 from camera.PeopleDetector import PeopleDetector
