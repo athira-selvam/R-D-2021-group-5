@@ -138,5 +138,6 @@ class QuizController(Thread, QRCodeHandler):
 
     def handle_code(self, code_content: str):
         super().handle_code(code_content)
+        print("QUIZ: received code ", code_content)
         # Update the reference to the received answer
         self.__received_answer = code_content
