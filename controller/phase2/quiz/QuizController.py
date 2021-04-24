@@ -6,6 +6,7 @@ from typing import List, Optional
 
 from body.speaker_manager import SpeakerManager
 from camera.QRCodeHandler import QRCodeHandler
+from controller.phase2.quiz.QuizCompletionHandler import QuizCompletionHandler
 
 QUESTIONS_LIMIT = 2
 
@@ -41,9 +42,9 @@ class QuizQuestion:
 
 
 quiz_questions: List[QuizQuestion] = [
-    QuizQuestion("test question", QuizAnswer.TRUE, "sample"),
-    QuizQuestion("false?", QuizAnswer.FALSE, "sample"),
-    QuizQuestion("maybe not", QuizAnswer.TRUE, "sample"),
+    QuizQuestion("test question", QuizAnswer.TRUE, "cucine"),
+    QuizQuestion("false?", QuizAnswer.FALSE, "cucine"),
+    QuizQuestion("maybe not", QuizAnswer.TRUE, "cucine"),
 ]
 
 
@@ -65,7 +66,9 @@ class QuizController(Thread, QRCodeHandler):
 
     __speaker: SpeakerManager
 
-    def __init__(self):
+    __completion_handler: QuizCompletionHandler
+
+    def __init__(self, completion_handler):
         super().__init__()
         self.__alive = True
         self.__received_answer = None
@@ -73,6 +76,7 @@ class QuizController(Thread, QRCodeHandler):
         self.__to_repeat = False
         self.__picked_questions = []
         self.__speaker = SpeakerManager()
+        self.__completion_handler = completion_handler
 
     def __pick_question(self) -> QuizQuestion:
 
@@ -163,6 +167,9 @@ class QuizController(Thread, QRCodeHandler):
                 # TODO: Find a way to notify VisitorsManager that quiz has finished
             # Then wait a bit before picking the next question
             time.sleep(2)  # TODO: adjust this time interval
+        # Here the quiz is over (either because we stopped it or because we reached the last question)
+        # Hence we notify the completion handler
+        self.__completion_handler.on_quiz_completed()
 
     def stop(self):
         self.__alive = False
