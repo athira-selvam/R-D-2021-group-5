@@ -107,7 +107,7 @@ class PeopleDetector(Thread, FrameHandler):
 
                 for i in range(len(scores)):
                     if ((scores[i] > min_conf_threshold) and (scores[i] <= 1.0)):
-                        # Draw label
+                       
                         object_name = self.__labels[int(classes[i])]
                         if object_name != "person":
                             continue
