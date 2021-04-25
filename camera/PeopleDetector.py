@@ -74,8 +74,10 @@ class PeopleDetector(Thread, FrameHandler):
 
         frame_rate_calc = 1
         freq = cv2.getTickFrequency()
+        counter = {}
+        rot = 0
 
-        # TODO: Paste people detection code
+        
         while (self.__alive):
             t1 = cv2.getTickCount()
             ret, image = self.get_next_frame()
@@ -102,14 +104,14 @@ class PeopleDetector(Thread, FrameHandler):
                 val = []
                 track_id = 0
 
+
                 for i in range(len(scores)):
                     if ((scores[i] > min_conf_threshold) and (scores[i] <= 1.0)):
                         # Draw label
                         object_name = self.__labels[int(classes[i])]
                         if object_name != "person":
                             continue
-                        # Get bounding box coordinates and draw box
-                        # Interpreter can return coordinates that are outside of image dimensions, need to force them to be within image using max() and min()
+                        
                         rects = []
                         ymin = int(max(1, (boxes[i][0] * imH)))
                         rects.append(ymin)
@@ -124,20 +126,23 @@ class PeopleDetector(Thread, FrameHandler):
                         val = np.array(rects)
                         r.append(val.astype("int"))
 
-                        cv2.rectangle(frame, (xmin, ymin), (xmax, ymax), (10, 255, 0), 2)
+ #---------------------------------Head random rotation, rotate to 90 if any people detected---------------------------------#               
+                
+                if(r):
+                    __head.rotate(90)
+                else:
+                    if(rot = 0):
+                        __head.rotate(0)
+                    else:
+                        __head.rotate(180)
+                        
+                if(rot == 0):
+                    rot = 180
+                else:
+                    rot = 0
 
-                        xmid = xmin + ((xmax - xmin) / 2)
-                        ratio = xmid / frame_w
-
-                        angle = int(ratio * 180)
-                        if i == 0:
-                            # angle = self.__head.find_angle(p * (1 / 64))
-                            self.__head.rotate(angle)
-
-                # Draw framerate in corner of frame
-                cv2.putText(frame, 'FPS: {0:.2f}'.format(frame_rate_calc), (30, 50), cv2.FONT_HERSHEY_SIMPLEX, 1,
-                            (255, 255, 0), 2, cv2.LINE_AA)
-
+ #--------------------------------- Choose an ID, Check if present for atleast 10 frames ---------------------------------# 
+                
                 objects = self.__tracker.update(r)
                 flag = 0
                 next_id = 0
@@ -145,6 +150,8 @@ class PeopleDetector(Thread, FrameHandler):
                 new_coord = []
                 next_coord = []
                 coord = []
+
+
                 for (objectID, centroid) in objects.items():
                     if objectID == track_id:
                         flag = 1
@@ -153,18 +160,36 @@ class PeopleDetector(Thread, FrameHandler):
                         next_id = objectID
                         next_coord = centroid
                         i += 1
-                    text = "ID {}".format(objectID)
-                    cv2.putText(frame, text, (centroid[0] - 10, centroid[1] - 10),
-                                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-                    cv2.circle(frame, (centroid[0], centroid[1]), 4, (0, 255, 0), -1)
-
+                    if(objectID in counter):
+                        counter[objectID] +=1
+                    else:
+                        counter[objectID] = 0
+                    
                 if flag == 0:
                     track_id = next_id
                     coord = next_coord
                 else:
                     coord = new_coord
 
-                ### call head 
+ #--------------------------------- Control LED till 10 frames ---------------------------------# 
+
+                if(coord):
+                    led_pos = coord[0]
+                
+                index = math.floor((led_pos*4)/frame_w)
+
+                #call led with position and led position + 4 -> (2 leds)    
+
+
+
+ #--------------------------------- Set the handler as true if a person presemt for more than 20 frames ---------------------------------#             
+
+                if(counter[track_id]>20):
+                    print("setting people detection handler to true")
+                    self.__detection_handler.handle_person(is_person_present: True)
+                
+                #callmusic
+                
 
                 # All the results have been drawn on the frame, so it's time to display it.
                 cv2.imshow('Object detector', frame)

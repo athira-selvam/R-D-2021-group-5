@@ -4,7 +4,6 @@ kit = ServoKit(channels=16)
 import time
 from threading import Thread
 
-THRESHOLD = 10
 
 class HeadController(Thread):
     __angle: float
@@ -26,10 +25,9 @@ class HeadController(Thread):
                 time.sleep(1)
 
     def rotate(self, ang: float) -> None:
-        if(abs(ang-self.__angle) >= THRESHOLD):
+        if(ang >=0 && ang <= 180):
             self.__angle = ang
             self.__enable = True
-            print("Difference is greater than threshold, enabling")
 
     def stop(self):
         self.__alive = False
