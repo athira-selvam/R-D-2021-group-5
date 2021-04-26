@@ -53,10 +53,10 @@ class QuestionFactory:
         return q
 
     @staticmethod
-    def parse_file(self, file_path: str) -> List[QuizQuestion]:
+    def parse_file(file_path: str) -> List[QuizQuestion]:
         with open(file_path) as f:
             questions = json.load(f)
-            parsed_questions = [self.__parse_question(q) for q in questions]
+            parsed_questions = [QuestionFactory.__parse_question(q) for q in questions]
             return parsed_questions
 
 
