@@ -107,3 +107,13 @@ class SpeakerManager(Singleton, Synchronized):
             self.synchronize(synch_interval)
             mixer.Channel(id).unpause()
             print("unpaused at : " + str(time.time() * 1000))
+
+    def get_track_length(self, audio_track: str) -> float:
+        """
+        Retrieves the duration (in seconds) of the provided audio file
+        :param audio_track: the file name of the track
+        :return: The duration of the track in seconds
+        """
+        track_file = self.sounds_path + audio_track + self.sounds_extension
+        track = mixer.Sound(track_file)
+        return track.get_length()
