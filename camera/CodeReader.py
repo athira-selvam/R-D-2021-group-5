@@ -8,7 +8,7 @@ import zbar
 from camera.FrameHandler import FrameHandler
 from camera.QRCodeHandler import QRCodeHandler
 
-TIME_THRESHOLD = 30  # Seconds to wait before a code is detected twice
+TIME_THRESHOLD = 5  # Seconds to wait before a code is detected twice
 
 
 class CodeReader(Thread, FrameHandler):

@@ -115,6 +115,8 @@ class PeopleDetector(Thread, FrameHandler):
     __detection_handler: Optional[PeopleDetectionHandler]
     __tracker: CentroidTracker
 
+    __led_controller: LedController
+
     __detection_state: DetectionState  # Keep a reference ot the state
 
     def __init__(self):
@@ -140,6 +142,8 @@ class PeopleDetector(Thread, FrameHandler):
 
         self.__detection_handler = None
 
+        self.__led_controller = LedController()
+
         self.__detection_state = PersonNotPresentState(self.__detection_handler)
 
     def run(self) -> None:
@@ -155,7 +159,7 @@ class PeopleDetector(Thread, FrameHandler):
         input_mean = 127.5
         input_std = 127.5
 
-        counter = {}ù
+        counter = {}
         rot = 0
         
 
@@ -213,6 +217,7 @@ class PeopleDetector(Thread, FrameHandler):
                     self.__head.rotate(left if rot == 0 else right)
                     # Here we tell the detection state that no person is present
                     self.__detection_state = self.__detection_state.on_detection_result(False)
+                    counter = {}
                     # And then toggle the rotation
                     rot = 1 if rot == 0 else 1
 
@@ -255,18 +260,17 @@ class PeopleDetector(Thread, FrameHandler):
                         led_index = math.floor((x_pos * 3.0) / frame_w)
                         animation: LedAnimation = LedAnimation.ANIM_EYE_0
                         if led_index == 0:
-                            animation = LedAnimation.ANIM_EYE_0
+                            animation = LedAnimation.ANIM_EYE_2
                         if led_index == 1:
                             animation = LedAnimation.ANIM_EYE_1
                         if led_index == 2:
-                            animation = LedAnimation.ANIM_EYE_2
+                            animation = LedAnimation.ANIM_EYE_0
                         # Ask the led manager to play the animation
-                        LedController.play_animation(animation)
-                        cv2.line(frame, (int(frame_w / 3), 0), (int(frame_w / 4), frame_h), (0, 255, 0), 3)
-                        cv2.line(frame, (int(frame_w / 3 * 2), 0), (int(frame_w / 4 * 2), frame_h), (0, 255, 0), 3)
+                        self.__led_controller.play_animation(animation)
+                        cv2.line(frame, (int(frame_w / 3), 0), (int(frame_w / 3), frame_h), (0, 255, 0), 3)
+                        cv2.line(frame, (int(frame_w / 3 * 2), 0), (int(frame_w / 3 * 2), frame_h), (0, 255, 0), 3)
                         cv2.putText(frame, "Led index: %d" % led_index, (40, 40), cv2.FONT_HERSHEY_SIMPLEX, 0.7,
                                     (255, 0, 0), 2)  # Draw label text
-                        
                     # --------------------------------- Set the handler as true if a person presemt for more than 20 frames ---------------------------------#
 
                     if counter[track_id] > 20:
