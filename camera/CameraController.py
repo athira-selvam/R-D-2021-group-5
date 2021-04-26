@@ -34,6 +34,7 @@ class CameraController(Singleton, Thread):
         while self.__alive and self.__capture.isOpened():
             # Get the frame from video capture
             ret, frame = self.__capture.read()
+            frame = cv2.rotate(frame, cv2.ROTATE_180)
 
             if not ret:
                 continue
