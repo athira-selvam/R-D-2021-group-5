@@ -1,3 +1,4 @@
+import random
 import time
 from typing import List, Optional
 
@@ -6,6 +7,7 @@ from pygame.mixer import Sound
 
 from utils.Singleton import Singleton
 from body.Synchronized import Synchronized
+import os
 
 
 class SpeakerManager(Singleton, Synchronized):
@@ -37,8 +39,13 @@ class SpeakerManager(Singleton, Synchronized):
         # else channels are full
         return -1
 
+    def __pick_random_track(self, audio_track: str) -> str:
+        prefixed = [filename for filename in os.listdir(self.sounds_path) if filename.startswith(audio_track)]
+        return random.choice(prefixed)
+
     def start_audio_track(self, name, loops=0, synch_interval=0):
         """Play the track named = name and when the time is multiple of synch_interval (in milliseconds)"""
+        name = self.__pick_random_track(name)
         name = self.sounds_path + name + self.sounds_extension
         index = self.get_free_channel()
         if 0 <= index <= 12:
