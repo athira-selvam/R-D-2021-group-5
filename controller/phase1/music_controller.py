@@ -1,9 +1,56 @@
 import random
+from abc import ABC, abstractmethod
 
 from utils.Singleton import Singleton
 from body.speaker_manager import SpeakerManager
 from body.stick_manager import StickManager
 from controller.BehaviorManager import BehaviorManager
+
+
+class MusicControllerState(ABC):
+    @abstractmethod
+    def is_people_detection_enabled(self) -> bool:
+        pass
+
+    @abstractmethod
+    def should_handle_person_exit(self) -> bool:
+        pass
+
+
+class MusicPlayingState(MusicControllerState):
+
+    def __init__(self):
+        print("Switching to playing state")
+
+    def is_people_detection_enabled(self) -> bool:
+        return False
+
+    def should_handle_person_exit(self) -> bool:
+        return False
+
+
+class PersonGreetingState(MusicControllerState):
+
+    def __init__(self):
+        print("Switching to people greeting state")
+
+    def is_people_detection_enabled(self) -> bool:
+        return False
+
+    def should_handle_person_exit(self) -> bool:
+        return True
+
+
+class IdleState(MusicControllerState):
+
+    def __init__(self):
+        print("Switching to IDLE state")
+
+    def is_people_detection_enabled(self) -> bool:
+        return True
+
+    def should_handle_person_exit(self) -> bool:
+        return False
 
 
 class MusicController(Singleton, BehaviorManager):
@@ -22,16 +69,28 @@ class MusicController(Singleton, BehaviorManager):
     stick_manager = None
     speaker_manager: SpeakerManager = None
 
+    state: MusicControllerState
+
     def __init__(self):
         super().__init__()
         self.stick_manager = StickManager()
         self.speaker_manager = SpeakerManager()
+        self.state = IdleState()
 
     def handle_person(self, is_person_present: bool) -> None:
-        i = random.randint(0, len(self.music_track) - 1)
-        self.speaker_manager.start_audio_track(self.music_track[i], 0, 0)
-        self.stick_manager.start_animation(self.music_animation[i][1], self.music_animation[i][2],
-                                           self.music_animation[i][0], 0)
+        if not is_person_present and self.state.should_handle_person_exit():
+            self.state = IdleState()
+            
+        elif self.state.is_people_detection_enabled and is_person_present:
+            print("Entering people detected branch")
+            self.state = PersonGreetingState()
+            i = random.randint(0, len(self.music_track) - 1)
+            self.speaker_manager.start_audio_track(self.music_track[i], 0, 0)
+            self.stick_manager.start_animation(self.music_animation[i][1], self.music_animation[i][2],
+                                               self.music_animation[i][0], 0)
+        elif self.state.is_people_detection_enabled() and not is_person_present:
+            print("Entering not person present but enabled detection")
+            self.state = IdleState()
 
     def handle_code(self, code):
         super().handle_code(code)
@@ -62,14 +121,16 @@ class MusicController(Singleton, BehaviorManager):
                     self.active_track[i] = track  # change track
                     managed = True
 
-            if not managed:  # no instrument was stopped no instrument was chaghed track => start instrument
+            if not managed:  # no instrument was stopped no instrument was changed track => start instrument
                 self.speaker_manager.start_audio_track(code + "-" + str(self.active_tempo), -1,
                                                        self.active_synch_interval)
                 self.active_track.append(track)
                 self.active_instrument.append(instrument)
+                self.state = MusicPlayingState()
 
             if self.active_instrument == []:  # if no active elements at this point stop animation
                 self.stick_manager.stop_animation()
+                self.state = IdleState()
                 print("stopping all animations")
         elif code.startswith("t:"):
             code = code[2:]  # remove first 2 char
