@@ -9,6 +9,7 @@ import cv2
 import numpy as np
 from tensorflow.lite.python.interpreter import Interpreter
 
+from body.LedController import LedController, LedAnimation
 from camera.FrameHandler import FrameHandler
 from camera.HeadController import HeadController
 from camera.PeopleDetectionHandler import PeopleDetectionHandler
@@ -248,15 +249,21 @@ class PeopleDetector(Thread, FrameHandler):
                     if len(coord) > 0:
                         # If a person exists compute the index of the led to turn on
                         x_pos = coord[0]
-                        led_index = math.floor((x_pos * 4.0) / frame_w)
-                        cv2.line(frame, (int(frame_w / 4), 0), (int(frame_w / 4), frame_h), (0, 255, 0), 3)
-                        cv2.line(frame, (int(frame_w / 4 * 2), 0), (int(frame_w / 4 * 2), frame_h), (0, 255, 0), 3)
-                        cv2.line(frame, (int(frame_w / 4 * 3), 0), (int(frame_w / 4 * 3), frame_h), (0, 255, 0), 3)
+                        led_index = math.floor((x_pos * 3.0) / frame_w)
+                        animation: LedAnimation = LedAnimation.ANIM_EYE_0
+                        if led_index == 0:
+                            animation = LedAnimation.ANIM_EYE_0
+                        if led_index == 1:
+                            animation = LedAnimation.ANIM_EYE_1
+                        if led_index == 2:
+                            animation = LedAnimation.ANIM_EYE_2
+                        # Ask the led manager to play the animation
+                        LedController.play_animation(animation)
+                        cv2.line(frame, (int(frame_w / 3), 0), (int(frame_w / 4), frame_h), (0, 255, 0), 3)
+                        cv2.line(frame, (int(frame_w / 3 * 2), 0), (int(frame_w / 4 * 2), frame_h), (0, 255, 0), 3)
                         cv2.putText(frame, "Led index: %d" % led_index, (40, 40), cv2.FONT_HERSHEY_SIMPLEX, 0.7,
                                     (255, 0, 0), 2)  # Draw label text
-
-                        # TODO: call led with position and led position + 4 -> (2 leds)
-
+                        
                     # --------------------------------- Set the handler as true if a person presemt for more than 20 frames ---------------------------------#
 
                     if counter[track_id] > 20:

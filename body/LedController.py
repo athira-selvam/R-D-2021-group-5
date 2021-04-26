@@ -8,7 +8,9 @@ import time
 
 from utils.Singleton import Singleton
 
-LED_COUNT = 39
+LED_COUNT = 19
+
+EYE_INITIAL_LED = 4
 
 
 class LedAnimation(enum.Enum):
@@ -18,7 +20,10 @@ class LedAnimation(enum.Enum):
     ANIM_SUCCESS_FILL = 3
     ANIM_ERROR = 4,
     ANIM_MUSIC = 5,
-    ANIM_INSTRUMENT = 6
+    ANIM_INSTRUMENT = 6,
+    ANIM_EYE_0 = 7,
+    ANIM_EYE_1 = 8,
+    ANIM_EYE_2 = 9,
 
 
 class LedController(Singleton, Thread):
@@ -54,12 +59,25 @@ class LedController(Singleton, Thread):
                 self.error_animation()
             elif self.__animation == LedAnimation.ANIM_INSTRUMENT:
                 self.instrument_animation()
+            elif self.__animation == LedAnimation.ANIM_EYE_0:
+                self.eye_animation(0)
+            elif self.__animation == LedAnimation.ANIM_EYE_1:
+                self.eye_animation(1)
+            elif self.__animation == LedAnimation.ANIM_EYE_2:
+                self.eye_animation(2)
             else:
                 print("Unsupported animation")
             time.sleep(0.0001)
 
     def stop(self):
         self.__alive = False
+
+    def eye_animation(self, eye_index):
+        self.__pixels.fill((0, 0, 0))
+        self.__pixels[EYE_INITIAL_LED + eye_index] = (250, 166, 51)
+        self.__pixels[EYE_INITIAL_LED + eye_index + 5] = (250, 166, 51)
+        self.__pixels.write()
+        time.sleep(0.1)
 
     def off_animation(self):
         self.__pixels.fill((0, 0, 0))
@@ -84,8 +102,8 @@ class LedController(Singleton, Thread):
             self.__pixels[20 + i] = (0, 255, 0)
             self.__pixels.show()
             time.sleep(0.05)
-        time.sleep(0.01)
         self.__animation = LedAnimation.ANIM_SUCCESS_FILL
+        time.sleep(0.01)
 
     def success_fill(self):
         self.__pixels.fill((0, 255, 0))
@@ -124,7 +142,6 @@ class LedController(Singleton, Thread):
             for j in range(1, size + 1, 1):
                 self.__pixels[i + j] = (red, green, blue)
             self.__pixels[i + size + 1] = (red / 10, green / 10, blue / 10)
-            print(i)
             self.__pixels[LED_COUNT - i] = (red / 10, green / 10, blue / 10)
             for j in range(1, size + 1, 1):
                 self.__pixels[LED_COUNT - i - j] = (red, green, blue)
