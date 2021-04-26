@@ -1,5 +1,6 @@
 import sys
 
+from body.LedController import LedController
 from camera.CameraController import CameraController
 from camera.QRCodeHandler import QRCodeHandler
 from controller.BehaviorManager import BehaviorManager
@@ -41,3 +42,6 @@ class Launcher(QRCodeHandler):
 if __name__ == "__main__":
     # Instantiate the launcher
     launcher = Launcher()
+    # And initialize the led controller
+    lc = LedController()
+    lc.start()
