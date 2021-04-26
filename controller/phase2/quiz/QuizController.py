@@ -4,6 +4,7 @@ import time
 from threading import Thread
 from typing import List, Optional
 
+from body.LedController import LedController, LedAnimation
 from body.speaker_manager import SpeakerManager
 from camera.QRCodeHandler import QRCodeHandler
 from controller.phase2.quiz.QuizCompletionHandler import QuizCompletionHandler
@@ -65,6 +66,7 @@ class QuizController(Thread, QRCodeHandler):
     __received_answer: Optional[str]
 
     __speaker: SpeakerManager
+    __led_controller: LedController
 
     __completion_handler: QuizCompletionHandler
 
@@ -76,6 +78,7 @@ class QuizController(Thread, QRCodeHandler):
         self.__to_repeat = False
         self.__picked_questions = []
         self.__speaker = SpeakerManager()
+        self.__led_controller = LedController()
         self.__completion_handler = completion_handler
 
     def __pick_question(self) -> QuizQuestion:
@@ -120,6 +123,10 @@ class QuizController(Thread, QRCodeHandler):
             print("The question is: %s" % question.get_question())
             # Ask the question
             self.__speaker.start_audio_track(question.get_audio_file())
+            # And wait for the audio track to finish
+            time.sleep(self.__speaker.get_track_length(question.get_audio_file()))
+            # Show the blinking eye animation
+            self.__led_controller.play_animation(LedAnimation.ANIM_IDLE)
             # And then wait for the answer
             while self.__received_answer is None:
                 # Sleep until an answer is present
@@ -135,7 +142,13 @@ class QuizController(Thread, QRCodeHandler):
 
             if not valid:
                 # TODO: React to an invalid answer
-                pass
+                # Show an error animation on the LEDs
+                self.__led_controller.play_animation(LedAnimation.ANIM_ERROR)
+                # And an audio feedback
+                self.__speaker.start_audio_track("invalid_answer")
+                time.sleep(self.__speaker.get_track_length("invalid_answer"))
+                # And repeat the question
+                repeat = True
 
             # Then check whether the person wants the question to be repeated
             if repeat:
@@ -148,25 +161,30 @@ class QuizController(Thread, QRCodeHandler):
             # Then check the answer
             if question.get_answer() == answer:
                 print("Answer is right")
+                self.__led_controller.play_animation(LedAnimation.ANIM_SUCCESS)
                 self.__speaker.start_audio_track("right_answer")
+                time.sleep(self.__speaker.get_track_length("right_answer"))
             else:
                 print("Answer is wrong")
+                self.__led_controller.play_animation(LedAnimation.ANIM_ERROR)
                 self.__speaker.start_audio_track("wrong_answer")
+                time.sleep(self.__speaker.get_track_length("wrong_answer"))
 
             # Then if the question as an attached explanation, we say it:
             explanation = question.get_explanation_file()
             if explanation is not None:
+                self.__led_controller.play_animation(LedAnimation.ANIM_IDLE)
                 self.__speaker.start_audio_track(explanation)
+                time.sleep(self.__speaker.get_track_length(explanation))
 
             # Increase the counter of questions
             self.__asked_questions += 1
             # And stop if we asked all the questions
             if self.__asked_questions >= QUESTIONS_LIMIT:
                 print("Reached questions limit, stopping")
+                self.__speaker.start_audio_track("quiz_end")
+                time.sleep(self.__speaker.get_track_length("quiz_end"))
                 self.stop()
-                # TODO: Find a way to notify VisitorsManager that quiz has finished
-            # Then wait a bit before picking the next question
-            time.sleep(2)  # TODO: adjust this time interval
         # Here the quiz is over (either because we stopped it or because we reached the last question)
         # Hence we notify the completion handler
         self.__completion_handler.on_quiz_completed()
