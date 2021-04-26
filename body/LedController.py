@@ -1,7 +1,7 @@
 import enum
 import random
 from threading import Thread
-
+import json
 import board
 import neopixel
 import time
@@ -132,6 +132,21 @@ class LedController(Singleton, Thread):
         self.center_to_outside(255, 0, 0, 1, 60 / 1000, 460 / 1000)
         self.center_to_outside(0, 255, 0, 1, 60 / 1000, 460 / 1000)
         self.center_to_outside(0, 0, 255, 1, 60 / 1000, 460 / 1000)
+
+    def music_animation(self, music_index: int):
+        durations = [33, 24, 23, 27, 33, 25]
+        colors = [[255,0,0],[0,255,0],[0,0,255],[255,0,255],[255,255,0]]
+        with open('data.txt') as json_file:
+            data = json.load(json_file)
+            for i in data[music_index]:
+                display_symmetric(colors[music_index][0], colors[music_index][1], colors[music_index][2], i)
+                time.sleep(durations[music_index]/len(data[music_index]))
+
+    def display_symmetric(self, red: int, green: int, blue: int, up_to: int):
+        self.__pixels.fill((0, 0, 0))
+        for i in range(up_to):
+            self.__pixels[9 + i] = (red, green, blue)
+            self.__pixels[9 - i] = (red, green, blue)
 
     def center_to_outside(self, red: int, green: int, blue: int, size: int, speed_delay: float,
                           return_delay: float) -> None:
