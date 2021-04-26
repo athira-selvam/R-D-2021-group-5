@@ -2,7 +2,8 @@ import enum
 import random
 import time
 from threading import Thread
-from typing import List, Optional
+from typing import List, Optional, Dict
+import json
 
 from body.LedController import LedController, LedAnimation
 from body.speaker_manager import SpeakerManager
@@ -10,6 +11,7 @@ from camera.QRCodeHandler import QRCodeHandler
 from controller.phase2.quiz.QuizCompletionHandler import QuizCompletionHandler
 
 QUESTIONS_LIMIT = 2
+QUESTIONS_FILE = "quiz.json"
 
 
 class QuizAnswer(enum.Enum):
@@ -18,19 +20,14 @@ class QuizAnswer(enum.Enum):
 
 
 class QuizQuestion:
-    __question: str
     __answer: QuizAnswer
     __audio_file: str  # The name of the audio file for the question
     __explanation_file: Optional[str]
 
-    def __init__(self, question: str, answer: QuizAnswer, audio_file: str, explanation_file: Optional[str] = None):
-        self.__question = question
+    def __init__(self, audio_file: str, answer: QuizAnswer, explanation_file: Optional[str] = None):
         self.__answer = answer
         self.__audio_file = audio_file
         self.__explanation_file = explanation_file
-
-    def get_question(self) -> str:
-        return self.__question
 
     def get_answer(self) -> QuizAnswer:
         return self.__answer
@@ -42,11 +39,25 @@ class QuizQuestion:
         return self.__explanation_file
 
 
-quiz_questions: List[QuizQuestion] = [
-    QuizQuestion("test question", QuizAnswer.TRUE, "cucine"),
-    QuizQuestion("false?", QuizAnswer.FALSE, "cucine"),
-    QuizQuestion("maybe not", QuizAnswer.TRUE, "cucine"),
-]
+class QuestionFactory:
+    """
+    A class representing an object used to create quiz questions from a .json specification
+    """
+
+    @staticmethod
+    def __parse_question(question: Dict) -> QuizQuestion:
+        q = QuizQuestion(
+            question["audio"],
+            QuizAnswer.TRUE if question["answer"] == "T" else QuizAnswer.FALSE,
+            None if question["explanation"] == "" else question["explanation"])
+        return q
+
+    @staticmethod
+    def parse_file(self, file_path: str) -> List[QuizQuestion]:
+        with open(file_path) as f:
+            questions = json.load(f)
+            parsed_questions = [self.__parse_question(q) for q in questions]
+            return parsed_questions
 
 
 # TODO: Maybe here we can set a duration for each question, so we know how much to wait?
@@ -67,6 +78,7 @@ class QuizController(Thread, QRCodeHandler):
 
     __speaker: SpeakerManager
     __led_controller: LedController
+    __quiz_questions: List[QuizQuestion]
 
     __completion_handler: QuizCompletionHandler
 
@@ -81,23 +93,25 @@ class QuizController(Thread, QRCodeHandler):
         self.__led_controller = LedController()
         self.__completion_handler = completion_handler
 
+        self.__quiz_questions = QuestionFactory.parse_file(QUESTIONS_FILE)
+
     def __pick_question(self) -> QuizQuestion:
 
         # First check whether we have to repeat last question
         if self.__to_repeat:
             self.__to_repeat = False
             # If yes just take the last sampled question
-            return quiz_questions[self.__picked_questions[len(self.__picked_questions) - 1]]
+            return self.__quiz_questions[self.__picked_questions[len(self.__picked_questions) - 1]]
 
         # Otherwise generate random number between 0 and the total number of questions
-        q_index = random.randint(0, len(quiz_questions) - 1)
+        q_index = random.randint(0, len(self.__quiz_questions) - 1)
         while q_index in self.__picked_questions:
             # And avoid generating indexes already picked
-            q_index = random.randint(0, len(quiz_questions) - 1)
+            q_index = random.randint(0, len(self.__quiz_questions) - 1)
         # Eventually append the index to the list of used ones
         self.__picked_questions.append(q_index)
         # And return the question
-        return quiz_questions[q_index]
+        return self.__quiz_questions[q_index]
 
     @staticmethod
     def __parse_answer(raw_answer: str) -> (bool, bool, Optional[QuizAnswer]):
