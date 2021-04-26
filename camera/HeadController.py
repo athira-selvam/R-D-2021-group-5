@@ -18,14 +18,14 @@ class HeadController(Thread):
 
     def run(self) -> None:
         while self.__alive:
-            if(self.__enable):
+            if self.__enable:
                 print("Rotating head to %f" % self.__angle)
                 kit.servo[0].angle = self.__angle
                 self.__enable = False
                 time.sleep(1)
 
     def rotate(self, ang: float) -> None:
-        if(ang >=0 && ang <= 180):
+        if 0 <= ang <= 180:
             self.__angle = ang
             self.__enable = True
 
