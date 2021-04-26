@@ -160,8 +160,7 @@ class PeopleDetector(Thread, FrameHandler):
         input_std = 127.5
 
         counter = {}
-        rot = 0
-        
+        gone_left = False
 
         while self.__alive:
             ret, image = self.get_next_frame()
@@ -208,18 +207,18 @@ class PeopleDetector(Thread, FrameHandler):
                         r.append(val.astype("int"))
 
                 # ---------------------------------Head random rotation, rotate to 90 if any people detected---------------------------------#
-                left = randint(0, 85)
-                right = randint(95,180)
+                left = randint(0, 45)
+                right = randint(135, 180)
                 if len(r) > 0:
                     self.__head.rotate(90)
 
                 else:
-                    self.__head.rotate(left if rot == 0 else right)
+                    self.__head.rotate(right if gone_left else left)
                     # Here we tell the detection state that no person is present
                     self.__detection_state = self.__detection_state.on_detection_result(False)
                     counter = {}
                     # And then toggle the rotation
-                    rot = 1 if rot == 0 else 1
+                    gone_left = not gone_left
 
                 # --------------------------------- Choose an ID, Check if present for atleast 10 frames ---------------------------------#
 
