@@ -1,13 +1,21 @@
+import multiprocessing
 import random
+import time
 from abc import ABC, abstractmethod
+from typing import Optional
 
-from utils.Singleton import Singleton
 from body.speaker_manager import SpeakerManager
 from body.stick_manager import StickManager
 from controller.BehaviorManager import BehaviorManager
+from utils.Singleton import Singleton
 
 
 class MusicControllerState(ABC):
+    _output_done: bool
+
+    def __init__(self):
+        self._output_done = False
+
     @abstractmethod
     def is_people_detection_enabled(self) -> bool:
         pass
@@ -19,9 +27,6 @@ class MusicControllerState(ABC):
 
 class MusicPlayingState(MusicControllerState):
 
-    def __init__(self):
-        print("Switching to playing state")
-
     def is_people_detection_enabled(self) -> bool:
         return False
 
@@ -31,9 +36,6 @@ class MusicPlayingState(MusicControllerState):
 
 class PersonGreetingState(MusicControllerState):
 
-    def __init__(self):
-        print("Switching to people greeting state")
-
     def is_people_detection_enabled(self) -> bool:
         return False
 
@@ -42,9 +44,6 @@ class PersonGreetingState(MusicControllerState):
 
 
 class IdleState(MusicControllerState):
-
-    def __init__(self):
-        print("Switching to IDLE state")
 
     def is_people_detection_enabled(self) -> bool:
         return True
@@ -69,6 +68,8 @@ class MusicController(Singleton, BehaviorManager):
     stick_manager = None
     speaker_manager: SpeakerManager = None
 
+    __music_player_thread: Optional[multiprocessing.Process]
+
     state: MusicControllerState
 
     def __init__(self):
@@ -76,20 +77,33 @@ class MusicController(Singleton, BehaviorManager):
         self.stick_manager = StickManager()
         self.speaker_manager = SpeakerManager()
         self.state = IdleState()
+        self.__music_player_thread = None
+
+    def __play_greeting_music(self):
+        i = random.randint(0, len(self.music_track) - 1)
+        self.speaker_manager.start_audio_track(self.music_track[i], 0, 0)
+        self.stick_manager.start_animation(self.music_animation[i][1], self.music_animation[i][2],
+                                           self.music_animation[i][0], 0)
+        time.sleep(self.speaker_manager.get_track_length(self.music_track[i]))
+        # After say the after music speech
+        self.speaker_manager.start_track_and_wait("instrumentcard")
 
     def handle_person(self, is_person_present: bool) -> None:
-        if not is_person_present and self.state.should_handle_person_exit():
-            self.state = IdleState()
-            
-        elif self.state.is_people_detection_enabled and is_person_present:
+        if self.state.is_people_detection_enabled and is_person_present:
             print("Entering people detected branch")
             self.state = PersonGreetingState()
-            i = random.randint(0, len(self.music_track) - 1)
-            self.speaker_manager.start_audio_track(self.music_track[i], 0, 0)
-            self.stick_manager.start_animation(self.music_animation[i][1], self.music_animation[i][2],
-                                               self.music_animation[i][0], 0)
-        elif self.state.is_people_detection_enabled() and not is_person_present:
-            print("Entering not person present but enabled detection")
+            # If the music playing process was already running we kill them, and set up a new one
+            if self.__music_player_thread is not None and self.__music_player_thread.is_alive():
+                # We also gracefully stop the sticks manager
+                self.stick_manager.stop_animation()
+                self.__music_player_thread.kill()
+            self.__music_player_thread = multiprocessing.Process(target=self.__play_greeting_music)
+            self.__music_player_thread.start()
+        elif self.state.is_people_detection_enabled() and self.state.should_handle_person_exit() and not is_person_present:
+            print("Reacting to person not found")
+            if self.__music_player_thread is not None and self.__music_player_thread.is_alive():
+                self.__music_player_thread.kill()
+            self.stick_manager.stop_animation()
             self.state = IdleState()
 
     def handle_code(self, code):
@@ -126,12 +140,19 @@ class MusicController(Singleton, BehaviorManager):
                                                        self.active_synch_interval)
                 self.active_track.append(track)
                 self.active_instrument.append(instrument)
+                if self.__music_player_thread is not None and self.__music_player_thread.is_alive():
+                    self.__music_player_thread.kill()
+                    self.stick_manager.stop_animation()
+                # Here we kill the previous process if existing
                 self.state = MusicPlayingState()
 
             if self.active_instrument == []:  # if no active elements at this point stop animation
                 self.stick_manager.stop_animation()
                 self.state = IdleState()
+                # Here we thank the user
+                self.speaker_manager.start_track_and_wait("aftermusic")
                 print("stopping all animations")
+
         elif code.startswith("t:"):
             code = code[2:]  # remove first 2 char
             # change tempo

@@ -1,4 +1,5 @@
 import enum
+import os
 import random
 import time
 from threading import Thread
@@ -11,7 +12,7 @@ from camera.QRCodeHandler import QRCodeHandler
 from controller.phase2.quiz.QuizCompletionHandler import QuizCompletionHandler
 
 QUESTIONS_LIMIT = 2
-QUESTIONS_FILE = "quiz.json"
+QUESTIONS_FILE = os.path.join(os.getcwd(), "controller/phase2/quiz/quiz.json")
 
 
 class QuizAnswer(enum.Enum):
@@ -134,11 +135,8 @@ class QuizController(Thread, QRCodeHandler):
         while self.__alive:
             # Pick the question
             question = self.__pick_question()
-            print("The question is: %s" % question.get_question())
             # Ask the question
-            self.__speaker.start_audio_track(question.get_audio_file())
-            # And wait for the audio track to finish
-            time.sleep(self.__speaker.get_track_length(question.get_audio_file()))
+            self.__speaker.start_track_and_wait(question.get_audio_file())
             # Show the blinking eye animation
             self.__led_controller.play_animation(LedAnimation.ANIM_IDLE)
             # And then wait for the answer
@@ -159,8 +157,7 @@ class QuizController(Thread, QRCodeHandler):
                 # Show an error animation on the LEDs
                 self.__led_controller.play_animation(LedAnimation.ANIM_ERROR)
                 # And an audio feedback
-                self.__speaker.start_audio_track("invalid_answer")
-                time.sleep(self.__speaker.get_track_length("invalid_answer"))
+                self.__speaker.start_track_and_wait("validqr")
                 # And repeat the question
                 repeat = True
 
@@ -176,28 +173,23 @@ class QuizController(Thread, QRCodeHandler):
             if question.get_answer() == answer:
                 print("Answer is right")
                 self.__led_controller.play_animation(LedAnimation.ANIM_SUCCESS)
-                self.__speaker.start_audio_track("right_answer")
-                time.sleep(self.__speaker.get_track_length("right_answer"))
+                self.__speaker.start_track_and_wait("correct")
             else:
                 print("Answer is wrong")
                 self.__led_controller.play_animation(LedAnimation.ANIM_ERROR)
-                self.__speaker.start_audio_track("wrong_answer")
-                time.sleep(self.__speaker.get_track_length("wrong_answer"))
+                self.__speaker.start_track_and_wait("wrong")
 
             # Then if the question as an attached explanation, we say it:
             explanation = question.get_explanation_file()
             if explanation is not None:
                 self.__led_controller.play_animation(LedAnimation.ANIM_IDLE)
-                self.__speaker.start_audio_track(explanation)
-                time.sleep(self.__speaker.get_track_length(explanation))
-
+                self.__speaker.start_track_and_wait(explanation)
             # Increase the counter of questions
             self.__asked_questions += 1
             # And stop if we asked all the questions
             if self.__asked_questions >= QUESTIONS_LIMIT:
                 print("Reached questions limit, stopping")
-                self.__speaker.start_audio_track("quiz_end")
-                time.sleep(self.__speaker.get_track_length("quiz_end"))
+                self.__speaker.start_track_and_wait("endquiz")
                 self.stop()
         # Here the quiz is over (either because we stopped it or because we reached the last question)
         # Hence we notify the completion handler
