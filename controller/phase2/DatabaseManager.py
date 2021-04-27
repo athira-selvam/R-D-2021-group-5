@@ -13,6 +13,8 @@ class DatabaseManager():
     def __init__(self):
         # Initialize the database
         self.__db = TinyDB("./visitors_database.json")
+        # Clear the DB at each initialization
+        self.__db.drop_tables()
 
     def visitor_exists(self, visitor_id: str) -> bool:
         """Determines whether the provided visitor has been registered in the database
