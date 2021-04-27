@@ -32,6 +32,15 @@ class PeopleDetectionState(ABC):
         self._output = True
 
 
+class BusyWithFriend(PeopleDetectionState):
+
+    def on_result(self, person_detected: bool):
+        return self
+
+    def should_react_to_person(self) -> bool:
+        return False
+
+
 class PersonDetectedState(PeopleDetectionState):
 
     def on_result(self, person_detected: bool) -> PeopleDetectionState:
@@ -71,7 +80,7 @@ class VisitorsController(BehaviorManager, QuizCompletionHandler):
 
     def __create_handler_function(self, is_quiz: bool) -> Callable[[str], None]:
         if not is_quiz:
-            return lambda code: self.__handle_visitor_code(code)
+            return lambda code: Thread(target=self.__handle_visitor_code, args=[code]).start()
         else:
             return lambda code: self.__quiz_controller.handle_code(code)
 
@@ -115,6 +124,9 @@ class VisitorsController(BehaviorManager, QuizCompletionHandler):
 
         # First we extract the content of the message
         visitor_id = code_content.split(":")[1]
+        # Save the old detection state
+        old_detection_state = self.__detection_state
+        self.__detection_state = BusyWithFriend()
         print("Handling visitor %s" % visitor_id)
         # Then we ask the database manager whether the user has already entered or not
         if not self.__db_manager.visitor_exists(visitor_id):
@@ -122,6 +134,7 @@ class VisitorsController(BehaviorManager, QuizCompletionHandler):
             # Greet the visitor
             self.__speaker_manager.start_track_and_wait("afterticket")
             print("Written visitor %s entrance" % visitor_id)
+            self.__detection_state = old_detection_state
             return
 
         # Here we know that the visitor has already entered the exhibition,
@@ -130,6 +143,7 @@ class VisitorsController(BehaviorManager, QuizCompletionHandler):
             # Here the user has already participated in the quiz
             # TODO: React to the error
             print("Visitor %s already left exhibition" % visitor_id)
+            self.__detection_state = old_detection_state
             return
 
         # In this last case the user has to participate in the quiz
@@ -150,12 +164,12 @@ class VisitorsController(BehaviorManager, QuizCompletionHandler):
             # If the user is idle for more than 5 seconds, just ignore it
             if interaction_wait_counter - interaction_wait_start > 20:
                 break
-
         # Change the code handler back
         self.__state_code_handler = self.__create_handler_function(False)
 
         # If no reply is available or if the reply is negative, stop there
         if self.__interaction_code is None or self.__interaction_code != "yes":
+            self.__detection_state = old_detection_state
             return
 
         self.__interaction_code = None
@@ -177,3 +191,4 @@ class VisitorsController(BehaviorManager, QuizCompletionHandler):
         print("Received quiz completion event")
         # Here we just update the code handler to be in idle state
         self.__state_code_handler = self.__create_handler_function(False)
+        self.__detection_state = PersonDetectedState()
