@@ -27,17 +27,21 @@ class Launcher(QRCodeHandler):
 
         if phase_code != "inside" and phase_code != "outside":
             print("Phase is not valid")
-            self.__led_controller.play_animation(LedAnimation.ANIM_WRONG)
+            self.__led_controller.play_animation(LedAnimation.ANIM_ERROR)
+            SpeakerManager().start_track_and_wait("validqr")
+            self.__led_controller.play_animation(LedAnimation.ANIM_IDLE)
             return
         if phase_code == "outside":
             self.__led_controller.play_animation(LedAnimation.ANIM_SUCCESS)
             # Start phase 1
             SpeakerManager().start_track_and_wait("outside")
+            self.__led_controller.play_animation(LedAnimation.ANIM_IDLE)
             self.__behavior_manager = MusicController()
             print("Launched outside phase")
         elif phase_code == "inside":
             self.__led_controller.play_animation(LedAnimation.ANIM_SUCCESS)
             SpeakerManager().start_track_and_wait("inside")
+            self.__led_controller.play_animation(LedAnimation.ANIM_IDLE)
             self.__behavior_manager = VisitorsController()
             print("Launched inside phase")
         self.__camera_controller.subscribe_to_qrcode(self.__behavior_manager)

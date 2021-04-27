@@ -1,3 +1,6 @@
+from multiprocessing import Process
+from typing import Optional
+
 import enum
 import random
 from threading import Thread
@@ -34,6 +37,9 @@ class LedController(Singleton, Thread):
     __active_instruments: list
     __track_number: int
     __active_tempo: int
+
+    __led_process: Optional[Process]
+
     def __init__(self):
         super().__init__()
         self.__pixels = neopixel.NeoPixel(board.D18, 40, brightness=1.0, auto_write=False)
@@ -43,6 +49,7 @@ class LedController(Singleton, Thread):
         self.__active_instruments = []
         self.__track_number=-1
         self.__active_tempo=80
+        self.__led_process = None
 
     def play_animation(self, animation: LedAnimation, track=-1, instrument=None, tempo=80) -> None:
         """
@@ -90,7 +97,6 @@ class LedController(Singleton, Thread):
         self.__pixels[EYE_INITIAL_LED + eye_index] = (250, 166, 51)
         self.__pixels[EYE_INITIAL_LED + eye_index + 5] = (250, 166, 51)
         self.__pixels.write()
-        time.sleep(0.1)
 
     def off_animation(self):
         self.__pixels.fill((0, 0, 0))
@@ -99,7 +105,7 @@ class LedController(Singleton, Thread):
     def idle_animation(self):
         self.__pixels.fill((255, 255, 255))
         self.__pixels.show()
-        time.sleep(random.randint(1, 3))
+        time.sleep(random.random() * 0.75 + 0.33)
         for i in range(255, 0, -2):
             self.__pixels.fill((i, i, i))
             self.__pixels.show()
