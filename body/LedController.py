@@ -12,6 +12,7 @@ LED_COUNT = 19
 
 EYE_INITIAL_LED = 4
 
+INSTRUMENT_COLORS = [[0,165,79],[255,241,1],[46,48,146],[237,2,140],[0,174,239]]
 
 class LedAnimation(enum.Enum):
     ANIM_OFF = 0,
@@ -30,15 +31,19 @@ class LedController(Singleton, Thread):
     __pixels: None
     __animation: LedAnimation
     __alive: bool
-
+    __active_instruments:[]
+    __track_number: int
+    __active_tempo: int
     def __init__(self):
         super().__init__()
         self.__pixels = neopixel.NeoPixel(board.D18, 40, brightness=1.0, auto_write=False)
         # And set the blank animation as the default one
         self.__animation = LedAnimation.ANIM_OFF
         self.__alive = True
+        self.__track_number=-1
+        self.__active_tempo=80
 
-    def play_animation(self, animation: LedAnimation) -> None:
+    def play_animation(self, animation: LedAnimation, track=-1, instrument=None, tempo=80) -> None:
         """
         Plays the provided LED animation
         :param animation: the identifier of the desired animation
@@ -57,7 +62,12 @@ class LedController(Singleton, Thread):
                 self.success_fill()
             elif self.__animation == LedAnimation.ANIM_ERROR:
                 self.error_animation()
+            elif self.__animation == LedAnimation.ANIM_MUSIC:
+                self.__track_number = track
+                self.error_animation()
             elif self.__animation == LedAnimation.ANIM_INSTRUMENT:
+                self.__active_tempo = tempo
+                self.__active_instruments.append(instrument)
                 self.instrument_animation()
             elif self.__animation == LedAnimation.ANIM_EYE_0:
                 self.eye_animation(0)
@@ -127,11 +137,10 @@ class LedController(Singleton, Thread):
             self.__pixels.fill((i, 0, 0))
             self.__pixels.show()
             time.sleep(0.00001)
-
+60/tempo=9*x
     def instrument_animation(self):
-        self.center_to_outside(255, 0, 0, 1, 60 / 1000, 460 / 1000)
-        self.center_to_outside(0, 255, 0, 1, 60 / 1000, 460 / 1000)
-        self.center_to_outside(0, 0, 255, 1, 60 / 1000, 460 / 1000)
+        for i in self.__active_instruments:
+            self.center_to_outside(INSTRUMENT_COLORS[i][0], INSTRUMENT_COLORS[i][1], INSTRUMENT_COLORS[i][2], 1, 60 / (LED_COUNT/2*self.__active_tempo), 0)
 
     def music_animation(self, music_index: int):
         durations = [33, 24, 23, 27, 33, 25]
