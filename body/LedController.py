@@ -69,7 +69,7 @@ class LedController(Singleton, Thread):
             elif self.__animation == LedAnimation.ANIM_ERROR:
                 self.error_animation()
             elif self.__animation == LedAnimation.ANIM_MUSIC:
-                self.error_animation()
+                self.music_animation(self.__track_number)
             elif self.__animation == LedAnimation.ANIM_INSTRUMENT:
                 self.instrument_animation()
             elif self.__animation == LedAnimation.ANIM_EYE_0:
@@ -151,7 +151,8 @@ class LedController(Singleton, Thread):
         with open('data.txt') as json_file:
             data = json.load(json_file)
             for i in data[music_index]:
-                display_symmetric(colors[music_index][0], colors[music_index][1], colors[music_index][2], i)
+                i = int(i)
+                self.display_symmetric(colors[music_index][0], colors[music_index][1], colors[music_index][2], i)
                 time.sleep(durations[music_index]/len(data[music_index]))
 
     def display_symmetric(self, red: int, green: int, blue: int, up_to: int):
@@ -159,6 +160,7 @@ class LedController(Singleton, Thread):
         for i in range(up_to):
             self.__pixels[9 + i] = (red, green, blue)
             self.__pixels[9 - i] = (red, green, blue)
+            self.__pixels.show()
 
     def center_to_outside(self, red: int, green: int, blue: int, size: int, speed_delay: float,
                           return_delay: float) -> None:

@@ -70,6 +70,8 @@ class MusicController(Singleton, BehaviorManager):
     speaker_manager: SpeakerManager = None
     led_controller: LedController
 
+    current_track: int = -1 
+
     __music_player_thread: Optional[multiprocessing.Process]
 
     state: MusicControllerState
@@ -82,12 +84,7 @@ class MusicController(Singleton, BehaviorManager):
         self.__music_player_thread = None
         self.led_controller = LedController()
 
-    def __play_greeting_music(self):
-        i = random.randint(0, len(self.music_track) - 1)
-        self.led_controller.play_animation(LedAnimation.ANIM_MUSIC, track=i)
-        track = self.speaker_manager.start_audio_track(self.music_track[i], 0, 0)
-        self.stick_manager.start_animation(self.music_animation[i][1], self.music_animation[i][2],
-                                           self.music_animation[i][0], 0)
+    def __play_greeting_music(self, track: int):
         time.sleep(self.speaker_manager.get_track_length(track))
         # After say the after music speech
         self.speaker_manager.start_track_and_wait("instrumentcard")
@@ -100,12 +97,24 @@ class MusicController(Singleton, BehaviorManager):
             if self.__music_player_thread is not None and self.__music_player_thread.is_alive():
                 # We also gracefully stop the sticks manager
                 self.stick_manager.stop_animation()
+                if self.current_track != -1:
+                    self.speaker_manager.stop_audio_track(self.music_track[self.current_track])
+                    self.current_track = -1
                 self.__music_player_thread.kill()
-            self.__music_player_thread = multiprocessing.Process(target=self.__play_greeting_music)
+            i = random.randint(0, len(self.music_track) - 1)
+            self.current_track = i
+            self.led_controller.play_animation(LedAnimation.ANIM_MUSIC, track=i)
+            track = self.speaker_manager.start_audio_track(self.music_track[i], 0, 0)
+            self.stick_manager.start_animation(self.music_animation[i][1], self.music_animation[i][2],
+                                           self.music_animation[i][0], 0)
+            self.__music_player_thread = multiprocessing.Process(target=self.__play_greeting_music, args=[track])
             self.__music_player_thread.start()
         elif self.state.is_people_detection_enabled() and self.state.should_handle_person_exit() and not is_person_present:
             print("Reacting to person not found")
             if self.__music_player_thread is not None and self.__music_player_thread.is_alive():
+                if self.current_track != -1:
+                    self.speaker_manager.stop_audio_track(self.music_track[self.current_track])
+                    self.current_track = -1
                 self.__music_player_thread.kill()
             self.stick_manager.stop_animation()
             self.state = IdleState()
@@ -145,7 +154,9 @@ class MusicController(Singleton, BehaviorManager):
                 self.active_track.append(track)
                 self.active_instrument.append(instrument)
                 if self.__music_player_thread is not None and self.__music_player_thread.is_alive():
-                    self.__music_player_thread.kill()
+                    if self.current_track != -1:
+                        self.speaker_manager.stop_audio_track(self.music_track[self.current_track])
+                        self.current_track = -1
                     self.stick_manager.stop_animation()
                 # Here we kill the previous process if existing
                 self.state = MusicPlayingState()

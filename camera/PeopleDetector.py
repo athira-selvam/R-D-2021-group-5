@@ -201,8 +201,6 @@ class PeopleDetector(Thread, FrameHandler):
                         rects.append(xmax)
                         rects = [xmin, ymin, xmax, ymax]
 
-                        cv2.rectangle(frame, (xmin, ymin), (xmax, ymax), (0, 0, 255), 3)
-
                         val = np.array(rects)
                         r.append(val.astype("int"))
 
@@ -265,22 +263,11 @@ class PeopleDetector(Thread, FrameHandler):
                         if led_index == 2:
                             animation = LedAnimation.ANIM_EYE_0
                         # Ask the led manager to play the animation
-                        self.__led_controller.play_animation(animation)
-                        cv2.line(frame, (int(frame_w / 3), 0), (int(frame_w / 3), frame_h), (0, 255, 0), 3)
-                        cv2.line(frame, (int(frame_w / 3 * 2), 0), (int(frame_w / 3 * 2), frame_h), (0, 255, 0), 3)
-                        cv2.putText(frame, "Led index: %d" % led_index, (40, 40), cv2.FONT_HERSHEY_SIMPLEX, 0.7,
-                                    (255, 0, 0), 2)  # Draw label text
+                        #self.__led_controller.play_animation(animation)
                     # --------------------------------- Set the handler as true if a person presemt for more than 20 frames ---------------------------------#
 
                     if counter[track_id] > 20:
                         self.__detection_state = self.__detection_state.on_detection_result(True)
-
-                # All the results have been drawn on the frame, so it's time to display it.
-                cv2.imshow('Object detector', frame)
-
-                # Press 'q' to quit
-                if cv2.waitKey(1) == ord('q'):
-                    break
 
     def stop(self) -> None:
         self.__alive = False

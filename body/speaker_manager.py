@@ -83,7 +83,7 @@ class SpeakerManager(Singleton, Synchronized):
                 # Stop_name not found
                 print("Stop_name track not found")
 
-    def stop_audio_track(self, name, synch_interval):
+    def stop_audio_track(self, name, synch_interval=0   ):
         name = self.sounds_path + name + self.sounds_extension
         # search the music
         id = self.get_id(name)
