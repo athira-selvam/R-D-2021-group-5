@@ -47,4 +47,4 @@ if __name__ == "__main__":
 
     # And initialize the led controller
     lc = LedController()
-    # lc.start()
+    lc.start()

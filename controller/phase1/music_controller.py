@@ -7,6 +7,7 @@ from typing import Optional
 from body.speaker_manager import SpeakerManager
 from body.stick_manager import StickManager
 from controller.BehaviorManager import BehaviorManager
+from body.LedController import LedController, LedAnimation
 from utils.Singleton import Singleton
 
 
@@ -67,6 +68,7 @@ class MusicController(Singleton, BehaviorManager):
     active_rhythm = "four_four"
     stick_manager = None
     speaker_manager: SpeakerManager = None
+    led_controller: LedController
 
     __music_player_thread: Optional[multiprocessing.Process]
 
@@ -78,9 +80,11 @@ class MusicController(Singleton, BehaviorManager):
         self.speaker_manager = SpeakerManager()
         self.state = IdleState()
         self.__music_player_thread = None
+        self.led_controller = LedController()
 
     def __play_greeting_music(self):
         i = random.randint(0, len(self.music_track) - 1)
+        self.led_controller.play_animation(LedAnimation.ANIM_MUSIC, track=i)
         track = self.speaker_manager.start_audio_track(self.music_track[i], 0, 0)
         self.stick_manager.start_animation(self.music_animation[i][1], self.music_animation[i][2],
                                            self.music_animation[i][0], 0)

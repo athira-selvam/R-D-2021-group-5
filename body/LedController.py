@@ -31,7 +31,7 @@ class LedController(Singleton, Thread):
     __pixels: None
     __animation: LedAnimation
     __alive: bool
-    __active_instruments:[]
+    __active_instruments: list
     __track_number: int
     __active_tempo: int
     def __init__(self):
@@ -40,6 +40,7 @@ class LedController(Singleton, Thread):
         # And set the blank animation as the default one
         self.__animation = LedAnimation.ANIM_OFF
         self.__alive = True
+        self.__active_instruments = []
         self.__track_number=-1
         self.__active_tempo=80
 
@@ -49,6 +50,11 @@ class LedController(Singleton, Thread):
         :param animation: the identifier of the desired animation
         """
         self.__animation = animation
+        if track != -1
+            self.__track_number = track
+        self.__active_tempo = tempo
+        if instrument is not None:
+            self.__active_instruments.append(instrument)
 
     def run(self) -> None:
         while self.__alive:
@@ -63,11 +69,8 @@ class LedController(Singleton, Thread):
             elif self.__animation == LedAnimation.ANIM_ERROR:
                 self.error_animation()
             elif self.__animation == LedAnimation.ANIM_MUSIC:
-                self.__track_number = track
                 self.error_animation()
             elif self.__animation == LedAnimation.ANIM_INSTRUMENT:
-                self.__active_tempo = tempo
-                self.__active_instruments.append(instrument)
                 self.instrument_animation()
             elif self.__animation == LedAnimation.ANIM_EYE_0:
                 self.eye_animation(0)
@@ -137,7 +140,7 @@ class LedController(Singleton, Thread):
             self.__pixels.fill((i, 0, 0))
             self.__pixels.show()
             time.sleep(0.00001)
-60/tempo=9*x
+
     def instrument_animation(self):
         for i in self.__active_instruments:
             self.center_to_outside(INSTRUMENT_COLORS[i][0], INSTRUMENT_COLORS[i][1], INSTRUMENT_COLORS[i][2], 1, 60 / (LED_COUNT/2*self.__active_tempo), 0)
