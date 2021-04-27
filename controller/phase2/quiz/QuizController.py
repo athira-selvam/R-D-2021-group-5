@@ -190,6 +190,7 @@ class QuizController(Thread, QRCodeHandler):
                 print("Reached questions limit, stopping")
                 self.__speaker.start_track_and_wait("endquiz")
                 self.stop()
+            time.sleep(1.3)
         # Here the quiz is over (either because we stopped it or because we reached the last question)
         # Hence we notify the completion handler
         self.__completion_handler.on_quiz_completed()

@@ -118,12 +118,12 @@ class VisitorsController(BehaviorManager, QuizCompletionHandler):
     def __handle_visitor_code(self, code_content: str):
         print("Received code %s" % code_content)
 
-        if not code_content.startswith("visitor:"):
+        if not code_content.startswith("user"):
             print("Invalid visitor code")
             return
 
         # First we extract the content of the message
-        visitor_id = code_content.split(":")[1]
+        visitor_id = code_content
         # Save the old detection state
         old_detection_state = self.__detection_state
         self.__detection_state = BusyWithFriend()
