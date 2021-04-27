@@ -20,22 +20,19 @@ class Launcher(QRCodeHandler):
         # And register ourselves as the code handlers
         self.__camera_controller.subscribe_to_qrcode(self)
 
-    def handle_code(self, code_content: str):
-        super().handle_code(code_content)
-        if not code_content.startswith("phase:"):
-            print("This is not a valid phase-choice code")
+    def handle_code(self, phase_code: str):
+        super().handle_code(phase_code)
 
-        phase_code = code_content.split(":")[1]
         if phase_code != "inside" and phase_code != "outside":
             print("Phase is not valid")
             sys.exit(0)
         if phase_code == "outside":
             # Start phase 1
-            SpeakerManager().start_track_and_wait("inside")
+            SpeakerManager().start_track_and_wait("outside")
             self.__behavior_manager = MusicController()
             print("Launched inside phase")
         elif phase_code == "inside":
-            SpeakerManager().start_track_and_wait("outside")
+            SpeakerManager().start_track_and_wait("inside")
             self.__behavior_manager = VisitorsController()
             print("Launched outside phase")
         self.__camera_controller.subscribe_to_qrcode(self.__behavior_manager)
@@ -51,4 +48,3 @@ if __name__ == "__main__":
     # And initialize the led controller
     lc = LedController()
     # lc.start()
-    launcher.handle_code("phase:1")

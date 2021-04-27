@@ -115,18 +115,17 @@ class QuizController(Thread, QRCodeHandler):
         return self.__quiz_questions[q_index]
 
     @staticmethod
-    def __parse_answer(raw_answer: str) -> (bool, bool, Optional[QuizAnswer]):
-        if raw_answer is None or not raw_answer.startswith("quiz_answer:"):
+    def __parse_answer(answer_content: str) -> (bool, bool, Optional[QuizAnswer]):
+        if answer_content is None:
             # If the code is not a valid answer code, return an error
             return False, False, None
         # Otherwise parse it
-        answer_content = raw_answer.split(":")[1]
-        if answer_content == "R":
+        if answer_content == "repeat":
             # Here we need to repeat the question
             return True, True, None
-        if answer_content == "T":
+        if answer_content == "yes":
             return True, False, QuizAnswer.TRUE
-        elif answer_content == "F":
+        elif answer_content == "no":
             return True, False, QuizAnswer.FALSE
         else:
             return False, False, None
