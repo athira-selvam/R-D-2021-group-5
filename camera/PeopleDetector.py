@@ -269,6 +269,11 @@ class PeopleDetector(Thread, FrameHandler):
                     if counter[track_id] > 20:
                         self.__detection_state = self.__detection_state.on_detection_result(True)
 
+                cv2.imshow("Detector", frame)
+
+                if cv2.waitKey(1) == ord('q'):
+                    break
+
     def stop(self) -> None:
         self.__alive = False
 

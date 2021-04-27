@@ -9,7 +9,7 @@ from controller.BehaviorManager import BehaviorManager
 from controller.phase2.DatabaseManager import DatabaseManager
 from controller.phase2.quiz.QuizCompletionHandler import QuizCompletionHandler
 from controller.phase2.quiz.QuizController import QuizController
-
+from body.LedController import LedController, LedAnimation
 
 class PeopleDetectionState(ABC):
     _output: bool
@@ -78,6 +78,8 @@ class VisitorsController(BehaviorManager, QuizCompletionHandler):
 
     __interaction_code: Optional[str]
 
+    __led_controller: LedController
+
     def __create_handler_function(self, is_quiz: bool) -> Callable[[str], None]:
         if not is_quiz:
             return lambda code: Thread(target=self.__handle_visitor_code, args=[code]).start()
@@ -95,9 +97,13 @@ class VisitorsController(BehaviorManager, QuizCompletionHandler):
         self.__interaction_code = None
 
         self.__speaker_manager = SpeakerManager()
+        self.__led_controller = LedController()
+        self.__led_controller.play_animation(LedAnimation.ANIM_IDLE)
 
     def __greet_detected_person(self):
         self.__speaker_manager.start_track_and_wait("welcometicket")
+        self.__led_controller.play_animation(LedAnimation.ANIM_IDLE)
+
 
     def handle_person(self, is_person_present: bool) -> None:
         super().handle_person(is_person_present)
@@ -130,6 +136,7 @@ class VisitorsController(BehaviorManager, QuizCompletionHandler):
         print("Handling visitor %s" % visitor_id)
         # Then we ask the database manager whether the user has already entered or not
         if not self.__db_manager.visitor_exists(visitor_id):
+	    self.__led_controller.play_animation(LedAnimation.ANIM_SUCCESS)
             self.__db_manager.write_visitor_entrance(visitor_id)
             # Greet the visitor
             self.__speaker_manager.start_track_and_wait("afterticket")
@@ -149,6 +156,8 @@ class VisitorsController(BehaviorManager, QuizCompletionHandler):
         # In this last case the user has to participate in the quiz
         self.__db_manager.write_visitor_exit(visitor_id)
         print("Written visitor %s exit" % visitor_id)
+
+        self.__led_controller.play_animation(LedAnimation.ANIM_IDLE)
 
         # Here we introduce the visitor to the quiz:
         self.__speaker_manager.start_track_and_wait("quizintro")
@@ -173,6 +182,7 @@ class VisitorsController(BehaviorManager, QuizCompletionHandler):
             return
 
         self.__interaction_code = None
+        self.__led_controller.play_animation(LedAnimation.ANIM_SUCCESS)
 
         # We therefore instantiate the quiz controller, passing ourselves as the completion handler
         self.__quiz_controller = QuizController(self)
@@ -191,4 +201,6 @@ class VisitorsController(BehaviorManager, QuizCompletionHandler):
         print("Received quiz completion event")
         # Here we just update the code handler to be in idle state
         self.__state_code_handler = self.__create_handler_function(False)
+        # We go into person detected state becuse a person is still in front, so that idle state will be reached once it walks away
         self.__detection_state = PersonDetectedState()
+        self.__led_controller.play_animation(LedAnimation.ANIM_IDLE)
