@@ -1,6 +1,6 @@
 import sys
 
-from body.LedController import LedController
+from body.LedController import LedController ,LedAnimation
 from body.speaker_manager import SpeakerManager
 from camera.CameraController import CameraController
 from camera.QRCodeHandler import QRCodeHandler
@@ -25,7 +25,7 @@ class Launcher(QRCodeHandler):
 
         if phase_code != "inside" and phase_code != "outside":
             print("Phase is not valid")
-            sys.exit(0)
+            return
         if phase_code == "outside":
             # Start phase 1
             SpeakerManager().start_track_and_wait("outside")
@@ -48,3 +48,4 @@ if __name__ == "__main__":
     # And initialize the led controller
     lc = LedController()
     lc.start()
+    lc.play_animation(LedAnimation.ANIM_IDLE)
