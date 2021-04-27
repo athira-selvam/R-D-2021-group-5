@@ -38,8 +38,8 @@ class DatabaseManager():
         """
         query = Query()
         result = self.__db.search(
-            (query.id == visitor_id) and (query.exit != None))
-        return len(result) > 0
+            (query.id == visitor_id))
+        return len(result) > 0 and result[0]["exit"] != 0
 
     def write_visitor_entrance(self, visitor_id: str) -> None:
         """Registers the provided visitor into the database. The entry will contain:
@@ -51,7 +51,7 @@ class DatabaseManager():
             visitor_id (str): The identifier of the visitor
         """
         visitor_data = {"id": visitor_id,
-                        "entrance": time.time(), "exit": None}
+                        "entrance": time.time(), "exit": 0}
         self.__db.insert(visitor_data)
 
     def write_visitor_exit(self, visitor_id: str) -> None:
