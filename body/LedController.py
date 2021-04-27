@@ -50,7 +50,7 @@ class LedController(Singleton, Thread):
         :param animation: the identifier of the desired animation
         """
         self.__animation = animation
-        if track != -1
+        if track != -1:
             self.__track_number = track
         self.__active_tempo = tempo
         if instrument is not None:
