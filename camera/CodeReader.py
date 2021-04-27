@@ -41,7 +41,8 @@ class CodeReader(Thread, FrameHandler):
                 result = self.__scanner.scan(gray)
                 if len(result) != 0:
                     # Retrieve the actual content and decode it into a string
-                    code = result[0].data.decode("utf-8")
+                    code: str = result[0].data.decode("utf-8")
+                    code = code.lower()
                     # Then check the filtering condition
                     # We check whether the received code is the same as the last one
                     if self.__last_code is not None and self.__last_code == code:
@@ -56,7 +57,7 @@ class CodeReader(Thread, FrameHandler):
                     # Otherwise let it pass and update filter
                     self.__last_time = time.time()
                     self.__last_code = code
-                    print("Code %s passed through"%code)
+                    print("Code %s passed through" % code)
                     # Eventually notifying the handlers
                     self.__code_handler.handle_code(code)
             time.sleep(0.001)
