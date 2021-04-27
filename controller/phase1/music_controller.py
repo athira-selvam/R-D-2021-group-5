@@ -81,10 +81,10 @@ class MusicController(Singleton, BehaviorManager):
 
     def __play_greeting_music(self):
         i = random.randint(0, len(self.music_track) - 1)
-        self.speaker_manager.start_audio_track(self.music_track[i], 0, 0)
+        track = self.speaker_manager.start_audio_track(self.music_track[i], 0, 0)
         self.stick_manager.start_animation(self.music_animation[i][1], self.music_animation[i][2],
                                            self.music_animation[i][0], 0)
-        time.sleep(self.speaker_manager.get_track_length(self.music_track[i]))
+        time.sleep(self.speaker_manager.get_track_length(track))
         # After say the after music speech
         self.speaker_manager.start_track_and_wait("instrumentcard")
 

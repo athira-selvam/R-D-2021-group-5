@@ -43,11 +43,12 @@ class SpeakerManager(Singleton, Synchronized):
         prefixed = [filename for filename in os.listdir(self.sounds_path) if filename.startswith(audio_track)]
         return random.choice(prefixed)
 
-    def start_audio_track(self, name, loops=0, synch_interval=0) -> str:
+    def start_audio_track(self, name, loops=0, synch_interval=0, channel=None) -> str:
         """Play the track named = name and when the time is multiple of synch_interval (in milliseconds)"""
         name = self.__pick_random_track(name)
         name = self.sounds_path + name
-        index = self.get_free_channel()
+        index = self.get_free_channel() if channel is None else 0
+        print("Assigned channel %d" % index)
         if 0 <= index <= 12:
             # load file
             self.track_name[index] = name
@@ -122,10 +123,9 @@ class SpeakerManager(Singleton, Synchronized):
         :param audio_track: the file name of the track
         :return: The duration of the track in seconds
         """
-        track_file = self.sounds_path + audio_track
-        track = mixer.Sound(track_file)
+        track = mixer.Sound(audio_track)
         return track.get_length()
 
     def start_track_and_wait(self, audio_track):
-        track = self.start_audio_track(audio_track)
+        track = self.start_audio_track(audio_track, channel=0)
         time.sleep(self.get_track_length(track))

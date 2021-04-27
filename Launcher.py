@@ -1,4 +1,3 @@
-import os
 import sys
 
 from body.LedController import LedController
@@ -8,7 +7,6 @@ from camera.QRCodeHandler import QRCodeHandler
 from controller.BehaviorManager import BehaviorManager
 from controller.phase1.music_controller import MusicController
 from controller.phase2.VisitorsController import VisitorsController
-from controller.phase2.quiz.QuizController import QuestionFactory
 
 
 class Launcher(QRCodeHandler):
@@ -31,13 +29,13 @@ class Launcher(QRCodeHandler):
         if phase_code != "inside" and phase_code != "outside":
             print("Phase is not valid")
             sys.exit(0)
-        if phase_code == "inside":
+        if phase_code == "outside":
             # Start phase 1
-            SpeakerManager.start_track_and_wait("inside")
+            SpeakerManager().start_track_and_wait("inside")
             self.__behavior_manager = MusicController()
             print("Launched inside phase")
-        elif phase_code == "outside":
-            SpeakerManager.start_track_and_wait("outside")
+        elif phase_code == "inside":
+            SpeakerManager().start_track_and_wait("outside")
             self.__behavior_manager = VisitorsController()
             print("Launched outside phase")
         self.__camera_controller.subscribe_to_qrcode(self.__behavior_manager)
