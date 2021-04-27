@@ -140,6 +140,7 @@ class VisitorsController(BehaviorManager, QuizCompletionHandler):
         self.__speaker_manager.start_track_and_wait("quizintro")
 
         # We create a new handler, to set the interaction code
+        self.__state_code_handler = lambda code: self.__handle_interaction_code(code)
 
         # Then we should wait for the code
         interaction_wait_start = time.time()
@@ -147,7 +148,7 @@ class VisitorsController(BehaviorManager, QuizCompletionHandler):
             time.sleep(0.5)
             interaction_wait_counter = time.time()
             # If the user is idle for more than 5 seconds, just ignore it
-            if interaction_wait_counter - interaction_wait_start > 5:
+            if interaction_wait_counter - interaction_wait_start > 20:
                 break
 
         # Change the code handler back
@@ -156,6 +157,8 @@ class VisitorsController(BehaviorManager, QuizCompletionHandler):
         # If no reply is available or if the reply is negative, stop there
         if self.__interaction_code is None or self.__interaction_code != "yes":
             return
+
+        self.__interaction_code = None
 
         # We therefore instantiate the quiz controller, passing ourselves as the completion handler
         self.__quiz_controller = QuizController(self)
