@@ -60,6 +60,7 @@ class QuestionFactory:
             parsed_questions = [QuestionFactory.__parse_question(q) for q in questions]
             return parsed_questions
 
+
 class QuizController(Thread, QRCodeHandler):
     """
     A class, implementing the QR Code Handler interface, representing an object that can manage the quiz for one visitor
@@ -130,7 +131,7 @@ class QuizController(Thread, QRCodeHandler):
         while self.__alive:
             # Pick the question
             question = self.__pick_question()
-	    self.__led_controller.play_animation(LedAnimation.ANIM_IDLE)
+            self.__led_controller.play_animation(LedAnimation.ANIM_IDLE)
             # Ask the question
             self.__speaker.start_track_and_wait(question.get_audio_file())
             # And then wait for the answer
@@ -178,13 +179,13 @@ class QuizController(Thread, QRCodeHandler):
             if explanation is not None:
                 self.__led_controller.play_animation(LedAnimation.ANIM_IDLE)
                 self.__speaker.start_track_and_wait(explanation)
-		time.sleep(1.3)
+                time.sleep(1.3)
             # Increase the counter of questions
             self.__asked_questions += 1
             # And stop if we asked all the questions
             if self.__asked_questions >= QUESTIONS_LIMIT:
                 print("Reached questions limit, stopping")
-		self.__led_controller.play_animation(LedAnimation.ANIM_IDLE)
+                self.__led_controller.play_animation(LedAnimation.ANIM_IDLE)
                 self.__speaker.start_track_and_wait("endquiz")
                 self.stop()
             time.sleep(1.3)

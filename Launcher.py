@@ -1,6 +1,6 @@
 import sys
 
-from body.LedController import LedController ,LedAnimation
+from body.LedController import LedController, LedAnimation
 from body.speaker_manager import SpeakerManager
 from camera.CameraController import CameraController
 from camera.QRCodeHandler import QRCodeHandler

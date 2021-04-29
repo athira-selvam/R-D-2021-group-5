@@ -11,6 +11,7 @@ from controller.phase2.quiz.QuizCompletionHandler import QuizCompletionHandler
 from controller.phase2.quiz.QuizController import QuizController
 from body.LedController import LedController, LedAnimation
 
+
 class PeopleDetectionState(ABC):
     _output: bool
 
@@ -104,7 +105,6 @@ class VisitorsController(BehaviorManager, QuizCompletionHandler):
         self.__speaker_manager.start_track_and_wait("welcometicket")
         self.__led_controller.play_animation(LedAnimation.ANIM_IDLE)
 
-
     def handle_person(self, is_person_present: bool) -> None:
         super().handle_person(is_person_present)
         # If there is a person and we should react to it, we react
@@ -136,7 +136,7 @@ class VisitorsController(BehaviorManager, QuizCompletionHandler):
         print("Handling visitor %s" % visitor_id)
         # Then we ask the database manager whether the user has already entered or not
         if not self.__db_manager.visitor_exists(visitor_id):
-	    self.__led_controller.play_animation(LedAnimation.ANIM_SUCCESS)
+            self.__led_controller.play_animation(LedAnimation.ANIM_SUCCESS)
             self.__db_manager.write_visitor_entrance(visitor_id)
             # Greet the visitor
             self.__speaker_manager.start_track_and_wait("afterticket")
