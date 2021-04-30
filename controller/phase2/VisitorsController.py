@@ -142,6 +142,8 @@ class VisitorsController(BehaviorManager, QuizCompletionHandler):
             self.__speaker_manager.start_track_and_wait("afterticket")
             print("Written visitor %s entrance" % visitor_id)
             self.__detection_state = old_detection_state
+            # Then go back to IDLE animation
+            self.__led_controller.play_animation(LedAnimation.ANIM_IDLE)
             return
 
         # Here we know that the visitor has already entered the exhibition,

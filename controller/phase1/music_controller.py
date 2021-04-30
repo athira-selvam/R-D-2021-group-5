@@ -70,6 +70,7 @@ class MusicController(Singleton, BehaviorManager):
     speaker_manager: SpeakerManager = None
     led_controller: LedController
 
+
     current_track: int = -1 
 
     __music_player_thread: Optional[multiprocessing.Process]
@@ -83,6 +84,7 @@ class MusicController(Singleton, BehaviorManager):
         self.state = IdleState()
         self.__music_player_thread = None
         self.led_controller = LedController()
+        self.led_controller.play_animation(LedAnimation.ANIM_IDLE)
 
     def __play_greeting_music(self, track: int):
         time.sleep(self.speaker_manager.get_track_length(track))
@@ -122,6 +124,7 @@ class MusicController(Singleton, BehaviorManager):
     def handle_code(self, code):
         super().handle_code(code)
         if code.startswith("i:"):
+            self.__led_controller.play_animation(LedAnimation.ANIM_SUCCESS)
             code = code[2:]  # remove first 2 char
             if self.active_instrument == []:  # if no active elements at this point start animation indefinite
                 self.stick_manager.start_animation(self.active_rhythm, self.active_tempo, "indefinite",
@@ -167,8 +170,10 @@ class MusicController(Singleton, BehaviorManager):
                 # Here we thank the user
                 self.speaker_manager.start_track_and_wait("aftermusic")
                 print("stopping all animations")
+            self.__led_controller.play_animation(LedAnimation.ANIM_IDLE)
 
         elif code.startswith("t:"):
+            self.__led_controller.play_animation(LedAnimation.ANIM_SUCCESS)
             code = code[2:]  # remove first 2 char
             # change tempo
             self.speaker_manager.switch_audio_track(
@@ -179,6 +184,7 @@ class MusicController(Singleton, BehaviorManager):
             self.stick_manager.change_tempo(code)
             self.active_tempo = int(code)
             active_synch_interval = (60000 / self.active_tempo) * 4
+            self.__led_controller.play_animation(LedAnimation.ANIM_IDLE)
 
 
 if __name__ == "__main__":
