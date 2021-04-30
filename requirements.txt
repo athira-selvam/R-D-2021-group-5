@@ -3,3 +3,4 @@ easing_functions
 zbar-py
 board
 neopixel
+adafruit_servokit
